@@ -1,0 +1,10 @@
+USE HungryHubDB;
+GO
+
+ALTER TABLE Restaurants
+ADD ImagePath NVARCHAR(500) NULL;
+GO
+
+ALTER TABLE MenuItems
+ADD ImagePath NVARCHAR(500) NULL;
+GO
