@@ -131,3 +131,317 @@ real time. Admins monitor everything from a business intelligence dashboard.
 ---
 
 ## 📁 Project Structure
+
+HungryHub/
+
+│
+
+├── Controllers/
+
+│   ├── AccountController.cs        ← Registration & login
+
+│   ├── DashboardController.cs      ← Customer dashboard
+
+│   ├── OrderController.cs          ← Menu, cart, orders, payment
+
+│   ├── CartController.cs           ← Cart page
+
+│   ├── AdminController.cs          ← Full admin panel
+
+│   ├── RestaurantOwnerController.cs← Restaurant owner portal
+
+│   ├── FeaturesController.cs       ← Split, pre-order, subscription
+
+│   └── CouponController.cs         ← Coupon validation API
+
+│
+
+├── Models/
+
+│   ├── User.cs / Admin.cs
+
+│   ├── RestaurantDb.cs / MenuItem.cs
+
+│   ├── Order.cs / OrderItem.cs
+
+│   ├── CartItem.cs / CartViewModel.cs
+
+│   ├── Payment.cs / PaymentViewModel.cs
+
+│   ├── Coupon.cs / CouponUsage.cs
+
+│   ├── SplitOrder.cs / SplitParticipant.cs
+
+│   ├── PreOrder.cs / PreOrderItem.cs
+
+│   ├── MealPlan.cs / UserSubscription.cs
+
+│   ├── RestaurantOwner.cs
+
+│   ├── WeatherData.cs
+
+│   └── ... (ViewModels)
+
+│
+
+├── Services/
+
+│   ├── WeatherService.cs           ← OpenWeatherMap API
+
+│   ├── EmailReportService.cs       ← Weekly email reports
+
+│   ├── WeeklyReportHostedService.cs← Background scheduler
+
+│   ├── ImageService.cs             ← Image resize & save
+
+│   ├── PaymentService.cs           ← Payment processing
+
+│   └── ExcelService.cs             ← Excel export
+
+│
+
+├── Data/
+
+│   └── ApplicationDbContext.cs     ← EF Core DbContext
+
+│
+
+├── Views/
+
+│   ├── Account/                    ← Login, Register
+
+│   ├── Dashboard/                  ← Customer dashboard views
+
+│   ├── Order/                      ← Menu, Cart, Payment, Confirmation
+
+│   ├── Cart/                       ← Cart & checkout
+
+│   ├── Features/                   ← Split, PreOrder, Subscription
+
+│   ├── Admin/                      ← All admin views
+
+│   ├── RestaurantOwner/            ← Owner portal views
+
+│   └── Shared/
+
+│       ├── _DashboardLayout.cshtml ← Customer layout
+
+│       ├── _AdminLayout.cshtml     ← Admin layout
+
+│       └── _OwnerLayout.cshtml     ← Owner layout
+
+│
+
+├── wwwroot/
+
+│   ├── images/
+
+│   │   ├── restaurants/            ← Restaurant logos
+
+│   │   └── menu/                   ← Food photos
+
+│   └── ...
+
+│
+
+├── appsettings.json                ← Config (DB, Email, Weather)
+
+└── Program.cs                      ← App startup & DI
+
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8)
+- [SQL Server 2022](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+- [SSMS 22](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms)
+- [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended)
+
+### Installation
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/YOUR_USERNAME/HungryHub.git
+cd HungryHub
+```
+
+**2. Install NuGet packages**
+```bash
+dotnet restore
+```
+
+Or install manually in Visual Studio Package Manager Console:
+```powershell
+Install-Package Microsoft.EntityFrameworkCore.SqlServer
+Install-Package Microsoft.EntityFrameworkCore.Tools
+Install-Package BCrypt.Net-Next
+Install-Package EPPlus
+Install-Package MailKit
+Install-Package SixLabors.ImageSharp
+```
+
+**3. Configure `appsettings.json`**
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=YOUR_SERVER_NAME;Database=HungryHubDB;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "AdminSetup": {
+    "FirstName":     "Super",
+    "LastName":      "Admin",
+    "Email":         "admin@hungryhub.com",
+    "PlainPassword": "HH@Admin#2026!xZ9",
+    "PhoneNumber":   "+8801700000000",
+    "Gender":        "Male",
+    "DateOfBirth":   "1990-01-01"
+  },
+  "EmailSettings": {
+    "SmtpHost":    "smtp.gmail.com",
+    "SmtpPort":    587,
+    "SenderEmail": "YOUR_GMAIL@gmail.com",
+    "SenderName":  "HungryHub Reports",
+    "Password":    "YOUR_GMAIL_APP_PASSWORD",
+    "AdminEmail":  "admin@hungryhub.com"
+  },
+  "WeatherApi": {
+    "ApiKey":  "YOUR_OPENWEATHERMAP_API_KEY",
+    "City":    "Chattogram",
+    "Country": "BD"
+  }
+}
+```
+
+> Replace `YOUR_SERVER_NAME` with your SQL Server instance name
+> (find it in SSMS Object Explorer top panel)
+
+**4. Create the database**
+
+Open SSMS and run the full SQL setup script from
+`Database/HungryHubDB_Setup.sql`
+(create all tables and seed data)
+
+**5. Create image folders**
+
+Make sure these folders exist in `wwwroot/`:
+
+---
+
+## 🌐 API Integrations
+
+### OpenWeatherMap API
+- **Purpose:** Live weather data on customer dashboard
+- **Features:** Temperature, humidity, wind speed, weather emoji, food suggestions
+- **Free tier:** 1,000 calls/day
+- **Sign up:** https://openweathermap.org/api
+
+### Payment Methods (Simulated)
+The payment system simulates the following Bangladeshi and international methods:
+
+| Method | Type | Prefix |
+|--------|------|--------|
+| bKash | Mobile Banking | BK |
+| Nagad | Mobile Banking | NG |
+| Rocket (DBBL) | Mobile Banking | RK |
+| Visa | Card | VS |
+| Mastercard | Card | MC |
+| Cash on Delivery | Physical | — |
+
+> To integrate real payment gateways, replace `PaymentService.cs`
+> with the respective SDK (bKash API, Nagad API, Stripe for cards).
+
+### Email Reports (Gmail SMTP)
+- **Purpose:** Weekly automated business report every Monday 8AM
+- **Setup:** Enable 2-Step Verification on Gmail →
+  Security → App Passwords → Generate
+- **Config:** Add the 16-character app password to `appsettings.json`
+
+---
+
+## 👥 User Roles
+
+### 1. Customer
+- Register at `/Account/Register`
+- Login at `/Account/Login`
+- Access dashboard at `/Dashboard`
+
+### 2. Admin
+- First run: Visit `/Admin/Setup` to create account
+- Login at `/Admin/Login`
+- Full platform control
+
+### 3. Restaurant Owner
+- Account created by Admin at `/Admin/RestaurantOwners`
+- Login at `/RestaurantOwner/Login`
+- Manages only their own restaurant
+
+---
+
+## 🔑 Default Credentials
+
+### Admin Account
+> ⚠️ Create this first by visiting `/Admin/Setup`
+
+---
+
+## 🏷️ Sample Coupon Codes
+
+These coupon codes are seeded automatically:
+
+| Code | Discount | Min Order | Valid |
+|------|----------|-----------|-------|
+| `HUNGRY1ST` | 20% off (max ৳150) | ৳100 | 3 months |
+| `SAVE50` | ৳50 flat off | ৳300 | 1 month |
+| `WEEKEND20` | 20% off (max ৳100) | ৳200 | 2 months |
+| `BIRYANI30` | ৳30 flat off | ৳150 | 2 months |
+
+---
+
+## 📱 Portal URLs
+
+| Portal | URL | Who uses it |
+|--------|-----|-------------|
+| Customer App | `/` or `/Account/Login` | Customers |
+| Admin Panel | `/Admin/Login` | Admins |
+| Owner Portal | `/RestaurantOwner/Login` | Restaurant owners |
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome.
+
+1. Fork the project
+2. Create your feature branch
+   (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes
+   (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch
+   (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
+
+Built with ❤️ using ASP.NET Core 8 MVC
+
+> **HungryHub** — Delivering happiness, one meal at a time 🍔
+
+---
+
+<div align="center">
+
+⭐ **If you found this project helpful, please give it a star!** ⭐
+
+</div>
