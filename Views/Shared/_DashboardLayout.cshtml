@@ -1,0 +1,614 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width,
+    initial-scale=1" />
+    <title>@ViewData["Title"] - HungryHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+          rel="stylesheet" />
+    <style>
+            :root {
+                --primary: #e84545;
+                --primary-dk: #c73535;
+                --sidebar-w: 240px;
+                --topbar-h: 64px;
+                --bg: #f4f6fb;
+                --card-bg: #ffffff;
+                --text: #1a1a2e;
+                --muted: #8a8fa8;
+                --border: #eaecf3;
+                --shadow: 0 2px 16px rgba(0,0,0,0.07);
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: 'Poppins',sans-serif;
+                background: var(--bg);
+                color: var(--text);
+            }
+
+            /* ── Sidebar ── */
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: var(--sidebar-w);
+                height: 100vh;
+                background: #1a1a2e;
+                display: flex;
+                flex-direction: column;
+                z-index: 100;
+                overflow-y: auto;
+            }
+
+            .sidebar-brand {
+                padding: 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+
+                .sidebar-brand .logo-text {
+                    font-size: 1.3rem;
+                    font-weight: 700;
+                    color: #fff;
+                }
+
+                    .sidebar-brand .logo-text span {
+                        color: var(--primary);
+                    }
+
+            .sidebar-nav {
+                flex: 1;
+                padding: 16px 12px;
+            }
+
+            .nav-section-label {
+                font-size: 0.68rem;
+                font-weight: 600;
+                letter-spacing: 1.2px;
+                text-transform: uppercase;
+                color: rgba(255,255,255,0.3);
+                padding: 12px 12px 6px;
+            }
+
+            .nav-item a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                color: rgba(255,255,255,0.65);
+                text-decoration: none;
+                font-size: 0.9rem;
+                font-weight: 500;
+                transition: all 0.2s;
+                margin-bottom: 2px;
+            }
+
+                .nav-item a:hover,
+                .nav-item a.active {
+                    background: rgba(232,69,69,0.18);
+                    color: #fff;
+                }
+
+                .nav-item a.active {
+                    color: var(--primary);
+                }
+
+                .nav-item a .nav-icon {
+                    font-size: 1.1rem;
+                    width: 22px;
+                    text-align: center;
+                }
+
+            .sidebar-footer {
+                padding: 16px 12px;
+                border-top: 1px solid rgba(255,255,255,0.08);
+                flex-shrink: 0;
+            }
+
+                .sidebar-footer a {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    color: rgba(255,255,255,0.5);
+                    text-decoration: none;
+                    font-size: 0.88rem;
+                    transition: all 0.2s;
+                }
+
+                    .sidebar-footer a:hover {
+                        background: rgba(232,69,69,0.15);
+                        color: var(--primary);
+                    }
+
+            /* ── Topbar ── */
+            .topbar {
+                position: fixed;
+                top: 0;
+                left: var(--sidebar-w);
+                right: 0;
+                height: var(--topbar-h);
+                background: var(--card-bg);
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                padding: 0 24px;
+                gap: 12px;
+                z-index: 99;
+                box-shadow: var(--shadow);
+            }
+
+            .topbar-search {
+                flex: 1;
+                max-width: 460px;
+            }
+
+            .search-wrap {
+                position: relative;
+            }
+
+                .search-wrap input {
+                    width: 100%;
+                    border: 1.5px solid var(--border);
+                    border-radius: 12px;
+                    padding: 9px 16px 9px 40px;
+                    font-size: 0.9rem;
+                    font-family: 'Poppins',sans-serif;
+                    background: var(--bg);
+                    color: var(--text);
+                    transition: border-color 0.2s;
+                }
+
+                    .search-wrap input:focus {
+                        outline: none;
+                        border-color: var(--primary);
+                        background: #fff;
+                    }
+
+                .search-wrap .s-icon {
+                    position: absolute;
+                    left: 13px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: var(--muted);
+                    font-size: 0.95rem;
+                }
+
+            .topbar-right {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-left: auto;
+            }
+
+            .icon-btn {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                border: 1.5px solid var(--border);
+                background: var(--bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: all 0.2s;
+                text-decoration: none;
+                color: var(--text);
+                position: relative;
+            }
+
+                .icon-btn:hover {
+                    border-color: var(--primary);
+                    background: #fff5f5;
+                    color: var(--text);
+                }
+
+            .user-pill {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 5px 12px 5px 5px;
+                border-radius: 40px;
+                border: 1.5px solid var(--border);
+                background: var(--bg);
+                cursor: pointer;
+                transition: all 0.2s;
+                text-decoration: none;
+            }
+
+                .user-pill:hover {
+                    border-color: var(--primary);
+                    background: #fff5f5;
+                }
+
+            .avatar {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                background: var(--primary);
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.78rem;
+                font-weight: 700;
+                flex-shrink: 0;
+            }
+
+            .user-name {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--text);
+            }
+
+            /* ── Main content ── */
+            .main-content {
+                margin-left: var(--sidebar-w);
+                margin-top: var(--topbar-h);
+                padding: 28px;
+                min-height: calc(100vh - var(--topbar-h));
+            }
+
+            /* ── Responsive ── */
+            @@media (max-width:768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s;
+                }
+
+                    .sidebar.open {
+                        transform: translateX(0);
+                    }
+
+                .topbar {
+                    left: 0;
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+            }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span style="font-size:1.5rem;">🍔</span>
+            <div class="logo-text">
+                Hungry<span>Hub</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+
+            <div class="nav-item">
+                <a asp-controller="Dashboard"
+                       asp-action="Index"
+                       class="@(ViewContext.RouteData
+                                                      .Values["controller"]
+                                                      ?.ToString() == "Dashboard" &&
+                                                      ViewContext.RouteData
+                                                      .Values["action"]
+                                                      ?.ToString() == "Index"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">🏠</span>
+                    Dashboard
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Dashboard"
+                       asp-action="MyOrders"
+                       class="@(ViewContext.RouteData
+                                                      .Values["action"]
+                                                      ?.ToString() == "MyOrders"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">📦</span>
+                    My Orders
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Cart"
+                       asp-action="Index"
+                       class="@(ViewContext.RouteData
+                                                      .Values["controller"]
+                                                      ?.ToString() == "Cart"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">🛒</span>
+                    Cart
+                </a>
+            </div>
+
+            <div class="nav-section-label"
+                 style="margin-top:8px;">
+                Account
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Dashboard"
+                       asp-action="Profile"
+                       class="@(ViewContext.RouteData
+                                                      .Values["action"]
+                                                      ?.ToString() == "Profile"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">👤</span>
+                    My Profile
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Dashboard"
+                       asp-action="Favourites"
+                       class="@(ViewContext.RouteData
+                                                      .Values["action"]
+                                                      ?.ToString() == "Favourites"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">❤️</span>
+                    Favourites
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Dashboard"
+                       asp-action="Notifications"
+                       class="@(ViewContext.RouteData
+                                                      .Values["action"]
+                                                      ?.ToString() == "Notifications"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">🔔</span>
+                    Notifications
+                    @if (ViewBag.UnreadCount != null &&
+                         (int)ViewBag.UnreadCount > 0)
+                    {
+                        <span style="margin-left:auto;
+                            background:var(--primary);
+                            color:#fff;
+                            border-radius:20px;
+                            padding:1px 8px;
+                            font-size:0.7rem;">
+                            @ViewBag.UnreadCount
+                        </span>
+                    }
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Dashboard"
+                       asp-action="Settings"
+                       class="@(ViewContext.RouteData
+                                                      .Values["action"]
+                                                      ?.ToString() == "Settings"
+                                                      ? "active" : "")">
+                    <span class="nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </div>
+            <div class="nav-section-label"
+                 style="margin-top:8px;">
+                Special Features
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Features"
+                   asp-action="SplitOrder"
+                   class="@(ViewContext.RouteData
+                              .Values["controller"]
+                              ?.ToString() == "Features" &&
+                              ViewContext.RouteData
+                              .Values["action"]
+                              ?.ToString() == "SplitOrder"
+                              ? "active" : "")">
+                    <span class="nav-icon">💰</span>
+                    Split Order
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Features"
+                   asp-action="PreOrder"
+                   class="@(ViewContext.RouteData
+                              .Values["controller"]
+                              ?.ToString() == "Features" &&
+                              ViewContext.RouteData
+                              .Values["action"]
+                              ?.ToString() == "PreOrder"
+                              ? "active" : "")">
+                    <span class="nav-icon">🎉</span>
+                    Pre-Order Event
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a asp-controller="Features"
+                   asp-action="Subscription"
+                   class="@(ViewContext.RouteData
+                              .Values["controller"]
+                              ?.ToString() == "Features" &&
+                              ViewContext.RouteData
+                              .Values["action"]
+                              ?.ToString() == "Subscription"
+                              ? "active" : "")">
+                    <span class="nav-icon">🍱</span>
+                    Meal Plans
+                </a>
+            </div>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <a asp-controller="Account"
+                   asp-action="Logout">
+                <span>🚪</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+
+        <!-- Mobile toggle -->
+        <button onclick="document.getElementById(
+            'sidebar')
+            .classList.toggle('open')"
+                style="display:none;
+            background:none;
+            border:none;
+            font-size:1.4rem;
+            cursor:pointer;"
+                class="d-md-none">
+            ☰
+        </button>
+
+        <!-- Search -->
+        <div class="topbar-search">
+            <form asp-controller="Dashboard"
+                  asp-action="Index"
+                  method="get">
+                <div class="search-wrap">
+                    <span class="s-icon">🔍</span>
+                    <input type="text"
+                           name="search"
+                           value="@ViewBag.SearchQuery"
+                           placeholder="Search restaurants, cuisines..." />
+                </div>
+            </form>
+        </div>
+
+        <!-- Right side actions -->
+        <div class="topbar-right">
+
+            <!-- Weather badge -->
+            @if (ViewBag.Weather is
+                 HungryHub.Models.WeatherData wd)
+            {
+                <div style="display:flex;
+                    align-items:center;
+                    gap:5px;
+                    font-size:0.82rem;
+                    color:var(--muted);
+                    background:var(--bg);
+                    border:1.5px solid
+                    var(--border);
+                    border-radius:10px;
+                    padding:5px 11px;">
+                    <span>@wd.Emoji</span>
+                    <span style="font-weight:700;
+                        color:var(--text);">
+                        @wd.Temperature°C
+                    </span>
+                    <span>@wd.City</span>
+                </div>
+            }
+
+            <!-- Cart icon -->
+            <a class="icon-btn"
+                   asp-controller="Cart"
+                   asp-action="Index"
+                   title="Cart">
+                🛒
+            </a>
+
+            <!-- Notifications bell -->
+            <a class="icon-btn"
+                   asp-controller="Dashboard"
+                   asp-action="Notifications"
+                   title="Notifications">
+                🔔
+                @if (ViewBag.UnreadCount != null &&
+                     (int)ViewBag.UnreadCount > 0)
+                {
+                    <span style="position:absolute;
+                        top:-5px; right:-5px;
+                        background:#e84545;
+                        color:#fff;
+                        border-radius:50%;
+                        width:18px;
+                        height:18px;
+                        font-size:0.62rem;
+                        font-weight:700;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        border:2px solid #fff;">
+                        @ViewBag.UnreadCount
+                    </span>
+                }
+            </a>
+
+            <!-- User pill -->
+            <a class="user-pill"
+                   asp-controller="Dashboard"
+                   asp-action="Profile">
+                <div class="avatar"
+                     id="avatarInitials">
+                    ?
+                </div>
+                <span class="user-name"
+                      id="topbarUserName">
+                    @(ViewBag.UserFullName
+                        ?.ToString()
+                        ?.Split(' ')[0] ?? "User")
+                </span>
+            </a>
+
+        </div>
+    </header>
+
+    <!-- Main content area -->
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- Scripts — must be at bottom -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+        (function() {
+        var name = document.getElementById(
+        'topbarUserName');
+        if (name) {
+        var txt = name.textContent.trim();
+        if (txt) {
+        var parts = txt.split(' ');
+        var initials = '';
+        for (var i = 0;
+        i < Math.min(parts.length, 2);
+        i++) {
+        if (parts[i].length > 0)
+        initials +=
+        parts[i][0]
+        .toUpperCase();
+        }
+        var el = document.getElementById(
+        'avatarInitials');
+        if (el && initials)
+        el.textContent = initials;
+        }
+        }
+        })();
+    </script>
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

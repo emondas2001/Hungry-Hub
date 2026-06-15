@@ -1,0 +1,489 @@
+﻿@{
+    ViewData["Title"] = "Subscriptions";
+    Layout =
+        "~/Views/Shared/_AdminLayout.cshtml";
+
+    var subs = new List<HungryHub.Models.UserSubscription>();
+    if (ViewBag.SubList != null)
+    {
+        foreach (var item in ViewBag.SubList)
+        {
+            subs.Add(
+                (HungryHub.Models.UserSubscription)item);
+        }
+    }
+
+    var userEmails =
+        ViewBag.UserEmails
+        as Dictionary<int, string>
+        ?? new Dictionary<int, string>();
+
+    var allPlans =
+        ViewBag.AllPlans
+        as List<HungryHub.Models.MealPlan>
+        ?? new List<HungryHub.Models.MealPlan>();
+}
+
+<div class="page-heading">
+    Subscription Management
+</div>
+<div class="page-sub">
+    Manage meal plans and user subscriptions
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px;border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<!-- Meal Plans Management -->
+<div class="admin-table-card mb-4">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            📋 Meal Plans
+        </div>
+        <button class="btn-admin"
+                onclick="togglePlanForm()">
+            + New Plan
+        </button>
+    </div>
+
+    <!-- Add new plan form -->
+    <div id="newPlanForm"
+         style="display:none;
+        padding:20px;
+        border-bottom:1px solid
+        var(--border);">
+        <form asp-controller="Admin"
+              asp-action="SaveMealPlan"
+              method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   name="planId" value="0" />
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Plan Name *
+                    </label>
+                    <input type="text"
+                           name="planName"
+                           class="form-control"
+                           placeholder="e.g. Premium Plan"
+                           required />
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Meals/Week *
+                    </label>
+                    <input type="number"
+                           name="mealsPerWeek"
+                           class="form-control"
+                           placeholder="7"
+                           min="1" max="21"
+                           required />
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Price/Week (৳) *
+                    </label>
+                    <input type="number"
+                           name="pricePerWeek"
+                           class="form-control"
+                           placeholder="1500"
+                           min="0" step="0.01"
+                           required />
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Description
+                    </label>
+                    <input type="text"
+                           name="description"
+                           class="form-control"
+                           placeholder="Plan description" />
+                </div>
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn-admin">
+                        Save Plan
+                    </button>
+                    <button type="button"
+                            class="btn-admin"
+                            style="background:#f4f6fb;
+                        color:var(--text);
+                        margin-left:8px;"
+                            onclick="togglePlanForm()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Plans table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Plan Name</th>
+                <th>Meals/Week</th>
+                <th>Price/Week</th>
+                <th>Monthly</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var plan in allPlans)
+            {
+                <tr>
+                    <td style="font-weight:700;">
+                        @plan.PlanName
+                    </td>
+                    <td>@plan.MealsPerWeek meals</td>
+                    <td style="font-weight:700;
+                        color:var(--primary);">
+                        ৳@plan.PricePerWeek
+                        .ToString("N0")
+                    </td>
+                    <td style="color:var(--muted);
+                        font-size:0.85rem;">
+                        ৳@((plan.PricePerWeek * 4)
+                                                    .ToString("N0"))
+                    </td>
+                    <td style="font-size:0.82rem;
+                        color:var(--muted);
+                        max-width:200px;">
+                        @plan.Description
+                    </td>
+                    <td>
+                        @if (plan.IsActive)
+                        {
+                            <span class="status-badge
+                                s-confirmed">
+                                Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge
+                                s-cancelled">
+                                Inactive
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        <div style="display:flex;
+                            gap:6px;
+                            flex-wrap:wrap;">
+
+                            <!-- Edit plan inline -->
+                            <button class="btn-success-sm"
+                                    onclick="showEditPlan(this)"
+                                    data-id="@plan.PlanId"
+                                    data-name="@plan.PlanName"
+                                    data-desc="@(plan.Description ?? "")"
+                                    data-meals="@plan.MealsPerWeek"
+                                    data-price="@plan.PricePerWeek">
+                                Edit
+                            </button>
+
+                            <!-- Toggle active -->
+                            <form asp-controller="Admin"
+                                  asp-action="ToggleMealPlan"
+                                  method="post"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="planId"
+                                       value="@plan.PlanId" />
+                                <button type="submit"
+                                        class="@(plan.IsActive
+                                                                                    ? "btn-danger-sm"
+                                                                                    : "btn-success-sm")">
+                                    @(plan.IsActive
+                                        ? "Disable"
+                                        : "Enable")
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Edit plan form (hidden) -->
+    <div id="editPlanForm"
+         style="display:none;
+        padding:20px;
+        border-top:1px solid var(--border);
+        background:#fffaf0;">
+        <div style="font-weight:700;
+            font-size:0.9rem;
+            margin-bottom:12px;">
+            ✏️ Edit Plan
+        </div>
+        <form asp-controller="Admin"
+              asp-action="SaveMealPlan"
+              method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   name="planId"
+                   id="editPlanId" />
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Plan Name
+                    </label>
+                    <input type="text"
+                           name="planName"
+                           id="editPlanName"
+                           class="form-control"
+                           required />
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Meals/Week
+                    </label>
+                    <input type="number"
+                           name="mealsPerWeek"
+                           id="editMeals"
+                           class="form-control"
+                           min="1" max="21"
+                           required />
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Price/Week (৳)
+                    </label>
+                    <input type="number"
+                           name="pricePerWeek"
+                           id="editPrice"
+                           class="form-control"
+                           min="0" step="0.01"
+                           required />
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Description
+                    </label>
+                    <input type="text"
+                           name="description"
+                           id="editDesc"
+                           class="form-control" />
+                </div>
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn-admin">
+                        Update Plan
+                    </button>
+                    <button type="button"
+                            class="btn-admin"
+                            style="background:#f4f6fb;
+                        color:var(--text);
+                        margin-left:8px;"
+                            onclick="document
+                        .getElementById(
+                        'editPlanForm')
+                        .style.display='none'">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- User Subscriptions -->
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            👥 User Subscriptions
+            (@subs.Count)
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Plan</th>
+                <th>Restaurant</th>
+                <th>Period</th>
+                <th>Delivery</th>
+                <th>Total Paid</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sub in subs)
+            {
+                string email = userEmails
+               .ContainsKey(sub.UserId)
+               ? userEmails[sub.UserId]
+               : "Unknown";
+
+                string statusCss =
+                    sub.Status == "Active"
+                        ? "s-confirmed"
+                    : sub.Status == "Cancelled"
+                        ? "s-cancelled"
+                    : "s-pending";
+
+                <tr>
+                    <td style="font-size:0.82rem;">
+                        @email
+                    </td>
+                    <td style="font-weight:600;">
+                        @(sub.Plan?.PlanName
+                            ?? "Unknown")
+                        <div style="font-size:0.72rem;
+                            color:var(--muted);">
+                            @(sub.Plan?.MealsPerWeek
+                                ?? 0)
+                            meals/week
+                        </div>
+                    </td>
+                    <td>@sub.RestaurantName</td>
+                    <td style="font-size:0.8rem;
+                        color:var(--muted);">
+                        @sub.StartDate
+                        .ToString("dd MMM") –
+                        @sub.EndDate
+                        .ToString("dd MMM yy")
+                    </td>
+                    <td style="font-size:0.8rem;">
+                        @sub.DeliveryTime
+                        <div style="font-size:0.72rem;
+                            color:var(--muted);
+                            max-width:130px;
+                            white-space:nowrap;
+                            overflow:hidden;
+                            text-overflow:ellipsis;">
+                            @sub.DeliveryAddr
+                        </div>
+                    </td>
+                    <td style="font-weight:700;
+                        color:var(--primary);">
+                        ৳@sub.TotalPaid.ToString("N0")
+                    </td>
+                    <td>
+                        <span class="status-badge
+                            @statusCss">
+                            @sub.Status
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex;
+                            gap:5px;
+                            flex-wrap:wrap;">
+
+                            @if (sub.Status == "Active")
+                            {
+                                <form asp-controller="Admin"
+                                      asp-action="UpdateSubscription"
+                                      method="post"
+                                      style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="subscriptionId"
+                                           value="@sub.SubscriptionId" />
+                                    <input type="hidden"
+                                           name="newStatus"
+                                           value="Cancelled" />
+                                    <button type="submit"
+                                            class="btn-danger-sm"
+                                            onclick="return confirm(
+                                        'Cancel this subscription?');">
+                                        Cancel
+                                    </button>
+                                </form>
+                            }
+
+                            @if (sub.Status ==
+                                 "Cancelled")
+                            {
+                                <form asp-controller="Admin"
+                                      asp-action="UpdateSubscription"
+                                      method="post"
+                                      style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="subscriptionId"
+                                           value="@sub.SubscriptionId" />
+                                    <input type="hidden"
+                                           name="newStatus"
+                                           value="Active" />
+                                    <button type="submit"
+                                            class="btn-success-sm">
+                                        Reactivate
+                                    </button>
+                                </form>
+                            }
+
+                        </div>
+                    </td>
+                </tr>
+            }
+
+            @if (!subs.Any())
+            {
+                <tr>
+                    <td colspan="8"
+                        style="text-align:center;
+                        padding:40px;
+                        color:var(--muted);">
+                        No subscriptions yet.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+                function showEditPlan(btn) {
+            var id    = btn.getAttribute('data-id');
+            var name  = btn.getAttribute('data-name');
+            var desc  = btn.getAttribute('data-desc');
+            var meals = btn.getAttribute('data-meals');
+            var price = btn.getAttribute('data-price');
+
+            document.getElementById(
+                'editPlanId').value   = id;
+            document.getElementById(
+                'editPlanName').value = name;
+            document.getElementById(
+                'editDesc').value     = desc;
+            document.getElementById(
+                'editMeals').value    = meals;
+            document.getElementById(
+                'editPrice').value    = price;
+
+            var f = document.getElementById(
+                'editPlanForm');
+            f.style.display = 'block';
+            f.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+}

@@ -1,0 +1,422 @@
+﻿@model HungryHub.Models.Order
+@{
+    ViewData["Title"] = "Order Confirmed";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<style>
+    .confirm-wrap {
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    .confirm-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 36px 30px;
+        box-shadow: var(--shadow);
+        margin-bottom: 20px;
+    }
+    .success-icon {
+        font-size: 4rem;
+        margin-bottom: 10px;
+    }
+    .confirm-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .confirm-sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-top: 6px;
+    }
+    .order-id-badge {
+        display: inline-block;
+        background: #f4f6fb;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 7px 18px;
+        font-weight: 700;
+        font-size: 0.92rem;
+        margin: 14px 0;
+        color: var(--text);
+    }
+    .confirm-detail {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-top: 14px;
+        text-align: left;
+    }
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.86rem;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+    }
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    .detail-label {
+        color: var(--muted);
+        min-width: 110px;
+    }
+    .detail-val { font-weight: 600; }
+    .items-list {
+        text-align: left;
+        margin-top: 14px;
+    }
+    .item-confirm-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .item-confirm-row:last-child {
+        border-bottom: none;
+    }
+    .action-btns {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .btn-home {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 11px 26px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background 0.2s;
+        display: inline-block;
+        font-family: 'Poppins', sans-serif;
+    }
+    .btn-home:hover {
+        background: var(--primary-dk);
+        color: #fff;
+    }
+    .btn-cancel {
+        background: #fff;
+        color: #dc3545;
+        border: 1.5px solid #dc3545;
+        border-radius: 12px;
+        padding: 11px 26px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'Poppins', sans-serif;
+    }
+    .btn-cancel:hover {
+        background: #dc3545;
+        color: #fff;
+    }
+    .tracking-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 22px 0 6px;
+    }
+    .track-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        flex: 1;
+    }
+    .track-dot {
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        background: var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        border: 2px solid var(--border);
+        z-index: 1;
+    }
+    .track-dot.done {
+        background: #e8f9ee;
+        border-color: #51cf66;
+    }
+    .track-dot.active {
+        background: #fff5f5;
+        border-color: var(--primary);
+        animation: trackPulse 1.5s infinite;
+    }
+    .track-line {
+        flex: 1;
+        height: 2px;
+        background: var(--border);
+        margin-top: -20px;
+    }
+    .track-line.done {
+        background: #51cf66;
+    }
+    .track-label {
+        font-size: 0.7rem;
+        color: var(--muted);
+        text-align: center;
+    }
+    .payment-success-box {
+        background: #e8f9ee;
+        border: 1px solid #c3e6cb;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        color: #1d7044;
+        margin-top: 12px;
+        text-align: center;
+    }
+    .txn-id {
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #339af0;
+    }
+</style>
+
+<style>
+    @@keyframes trackPulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0
+                rgba(232,69,69,0.3);
+        }
+        50% {
+            box-shadow: 0 0 0 8px
+                rgba(232,69,69,0.0);
+        }
+    }
+</style>
+
+<div class="confirm-wrap">
+    <div class="confirm-card">
+
+        <div class="success-icon">🎉</div>
+        <div class="confirm-title">
+            Order Placed Successfully!
+        </div>
+        <div class="confirm-sub">
+            Thank you, @ViewBag.UserFullName!
+            Your food is being prepared.
+        </div>
+
+        <div class="order-id-badge">
+            Order #@Model.OrderId
+        </div>
+
+        <!-- Tracking bar -->
+        <div class="tracking-bar">
+            <div class="track-step">
+                <div class="track-dot done">✅</div>
+                <div class="track-label">
+                    Confirmed
+                </div>
+            </div>
+            <div class="track-line done"></div>
+            <div class="track-step">
+                <div class="track-dot active">
+                    👨‍🍳
+                </div>
+                <div class="track-label">
+                    Preparing
+                </div>
+            </div>
+            <div class="track-line"></div>
+            <div class="track-step">
+                <div class="track-dot">🛵</div>
+                <div class="track-label">
+                    On the way
+                </div>
+            </div>
+            <div class="track-line"></div>
+            <div class="track-step">
+                <div class="track-dot">🏠</div>
+                <div class="track-label">
+                    Delivered
+                </div>
+            </div>
+        </div>
+
+        <!-- Order details -->
+        <div class="confirm-detail">
+            <div class="detail-row">
+                <span class="detail-label">
+                    Restaurant
+                </span>
+                <span class="detail-val">
+                    @Model.RestaurantName
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">
+                    Order Date
+                </span>
+                <span class="detail-val">
+                    @Model.OrderDate.ToString(
+                        "dd MMM yyyy, hh:mm tt")
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">
+                    Delivery To
+                </span>
+                <span class="detail-val">
+                    @Model.DeliveryAddress
+                </span>
+            </div>
+            @if (!string.IsNullOrEmpty(
+                Model.OrderNote))
+            {
+                <div class="detail-row">
+                    <span class="detail-label">
+                        Note
+                    </span>
+                    <span class="detail-val">
+                        @Model.OrderNote
+                    </span>
+                </div>
+            }
+            <div class="detail-row">
+                <span class="detail-label">
+                    Status
+                </span>
+                <span class="detail-val"
+                      style="color:#51cf66;">
+                    @(Model.Status == "PendingPayment"
+                        ? "Confirmed"
+                        : Model.Status)
+                </span>
+            </div>
+
+            <!-- Payment info -->
+            @{
+                string pmStr =
+                    ViewBag.PaymentMethod
+                    ?.ToString() ?? "";
+                string pmIcon = pmStr switch
+                {
+                    "bKash"      => "📱",
+                    "Nagad"      => "📲",
+                    "Rocket"     => "🚀",
+                    "Visa"       => "💳",
+                    "Mastercard" => "💳",
+                    "Cash"       => "💵",
+                    _            => "💰"
+                };
+            }
+            @if (!string.IsNullOrEmpty(pmStr) &&
+                 pmStr != "Pending")
+            {
+                <div class="detail-row">
+                    <span class="detail-label">
+                        Payment
+                    </span>
+                    <span class="detail-val">
+                        @pmIcon @pmStr
+                    </span>
+                </div>
+            }
+
+            @{
+                string txnStr =
+                    ViewBag.TransactionId
+                    ?.ToString() ?? "";
+            }
+            @if (!string.IsNullOrEmpty(txnStr) &&
+                 txnStr != "Pending")
+            {
+                <div class="detail-row">
+                    <span class="detail-label">
+                        Transaction ID
+                    </span>
+                    <span class="txn-id">
+                        @txnStr
+                    </span>
+                </div>
+            }
+        </div>
+
+        <!-- Payment success box -->
+        @if (ViewBag.PaymentSuccess != null &&
+             ViewBag.PaymentSuccess.ToString()
+             == "true")
+        {
+            <div class="payment-success-box">
+                ✅ Payment confirmed via @pmStr!
+                @if (!string.IsNullOrEmpty(txnStr)
+                     && txnStr != "Pending")
+                {
+                    <br/>
+                    <span style="font-size:0.78rem;
+                                 color:#555;">
+                        TXN: @txnStr
+                    </span>
+                }
+            </div>
+        }
+
+        <!-- Items list -->
+        <div class="items-list">
+            @foreach (var item in Model.OrderItems)
+            {
+                <div class="item-confirm-row">
+                    <span>
+                        @item.ItemName
+                        x@item.Quantity
+                    </span>
+                    <span style="font-weight:600;">
+                        &#2547;@item.SubTotal
+                            .ToString("0")
+                    </span>
+                </div>
+            }
+            <div class="item-confirm-row">
+                <span style="color:var(--muted);">
+                    Delivery fee
+                </span>
+                <span>
+                    &#2547;@Model.DeliveryFee
+                        .ToString("0")
+                </span>
+            </div>
+            <div class="item-confirm-row"
+                 style="font-weight:700;
+                        font-size:0.95rem;">
+                <span>Grand Total</span>
+                <span style="color:var(--primary);">
+                    &#2547;@Model.GrandTotal
+                        .ToString("0")
+                </span>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-btns">
+            <a href="/Dashboard" class="btn-home">
+                🏠 Back to Home
+            </a>
+            <form asp-controller="Order"
+                  asp-action="CancelOrder"
+                  method="post"
+                  onsubmit="return confirm(
+                      'Cancel this order?');"
+                  style="margin:0;">
+                @Html.AntiForgeryToken()
+                <input type="hidden"
+                       name="orderId"
+                       value="@Model.OrderId"/>
+                <button type="submit"
+                        class="btn-cancel">
+                    Cancel Order
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>

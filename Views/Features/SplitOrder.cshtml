@@ -1,0 +1,438 @@
+﻿@{
+    ViewData["Title"] = "Split Order";
+    Layout =
+        "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<style>
+    .page-title {
+        font-size:1.4rem; font-weight:700;
+        color:var(--text);
+    }
+    .page-sub {
+        color:var(--muted); font-size:0.9rem;
+        margin-top:2px; margin-bottom:20px;
+    }
+    .feature-card {
+        background:#fff; border-radius:18px;
+        box-shadow:var(--shadow); padding:24px;
+        margin-bottom:20px;
+    }
+    .feature-card h5 {
+        font-size:1rem; font-weight:700;
+        color:var(--text); margin-bottom:16px;
+        padding-bottom:10px;
+        border-bottom:2px solid var(--border);
+    }
+    .form-label {
+        font-size:0.85rem; font-weight:600;
+        color:#444;
+    }
+    .form-control, .form-select {
+        border-radius:10px;
+        border:1.5px solid var(--border);
+        padding:9px 13px; font-size:0.88rem;
+        font-family:'Poppins',sans-serif;
+        transition:border-color 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+        outline:none;
+        border-color:var(--primary);
+        box-shadow:0 0 0 3px
+            rgba(232,69,69,0.1);
+    }
+    .btn-primary-sm {
+        background:var(--primary); color:#fff;
+        border:none; border-radius:9px;
+        padding:8px 18px; font-size:0.85rem;
+        font-weight:600; cursor:pointer;
+        font-family:'Poppins',sans-serif;
+    }
+    .btn-primary-sm:hover {
+        background:var(--primary-dk);
+    }
+    .btn-danger-sm {
+        background:#fdecea;
+        border:1.5px solid #f5c6c6;
+        border-radius:8px; padding:5px 12px;
+        font-size:0.78rem; font-weight:600;
+        color:#c62828; cursor:pointer;
+        font-family:'Poppins',sans-serif;
+    }
+    .btn-success-sm {
+        background:#e8f9ee;
+        border:1.5px solid #c3e6cb;
+        border-radius:8px; padding:5px 12px;
+        font-size:0.78rem; font-weight:600;
+        color:#1d7044; cursor:pointer;
+        font-family:'Poppins',sans-serif;
+    }
+    .split-card {
+        background:#f8f9ff;
+        border-radius:14px; padding:18px;
+        margin-bottom:14px;
+        border:1.5px solid var(--border);
+    }
+    .split-header {
+        display:flex; align-items:center;
+        justify-content:space-between;
+        margin-bottom:12px;
+    }
+    .split-title {
+        font-weight:700; font-size:0.95rem;
+        color:var(--text);
+    }
+    .participant-row {
+        display:flex; align-items:center;
+        gap:10px; padding:8px 0;
+        border-bottom:1px solid var(--border);
+        font-size:0.85rem;
+    }
+    .participant-row:last-child {
+        border-bottom:none;
+    }
+    .p-name { flex:1; font-weight:600; }
+    .p-email {
+        color:var(--muted); font-size:0.78rem;
+        flex:1;
+    }
+    .p-amount {
+        font-weight:700; color:var(--primary);
+    }
+    .badge-paid {
+        background:#e8f9ee; color:#1d7044;
+        border-radius:20px; padding:2px 10px;
+        font-size:0.72rem; font-weight:700;
+    }
+    .badge-unpaid {
+        background:#fdecea; color:#c62828;
+        border-radius:20px; padding:2px 10px;
+        font-size:0.72rem; font-weight:700;
+    }
+    .add-row-btn {
+        background:none;
+        border:1.5px dashed var(--border);
+        border-radius:8px; padding:8px;
+        width:100%; font-size:0.83rem;
+        color:var(--muted); cursor:pointer;
+        transition:all 0.2s; margin-top:8px;
+        font-family:'Poppins',sans-serif;
+    }
+    .add-row-btn:hover {
+        border-color:var(--primary);
+        color:var(--primary);
+    }
+</style>
+
+<div class="page-title">💰 Split Order</div>
+<div class="page-sub">
+    Split your food bill with friends and family
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px;border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:12px;border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Create split form -->
+<div class="feature-card">
+    <h5>➕ Create New Split</h5>
+    <form asp-controller="Features"
+          asp-action="CreateSplit"
+          method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">
+                    Select Order *
+                </label>
+                <select name="orderId"
+                        class="form-select"
+                        required>
+                    <option value="">
+                        -- Choose an order --
+                    </option>
+                    @foreach (var o in
+                        ViewBag.UserOrders
+                        as IEnumerable<dynamic>
+                        ?? new List<dynamic>())
+                    {
+                        <option value="@o.OrderId">
+                            #@o.OrderId —
+                            @o.RestaurantName —
+                            ৳@string.Format(
+                                                            "{0:N0}",
+                                                            o.GrandTotal)
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">
+                    Split Type *
+                </label>
+                <select name="splitType"
+                        class="form-select"
+                        id="splitTypeSelect"
+                        onchange="toggleSplitType()">
+                    <option value="Equal">
+                        Equal Split
+                    </option>
+                    <option value="Custom">
+                        Custom Amounts
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <div id="participantsContainer">
+            <div class="participant-input-row"
+                 style="display:grid;
+                grid-template-columns:
+                2fr 2fr 1fr auto;
+                gap:10px;
+                margin-bottom:8px;
+                align-items:end;">
+                <div>
+                    <label class="form-label">
+                        Name *
+                    </label>
+                    <input type="text"
+                           name="names"
+                           class="form-control"
+                           placeholder="Person name"
+                           required />
+                </div>
+                <div>
+                    <label class="form-label">
+                        Email
+                    </label>
+                    <input type="email"
+                           name="emails"
+                           class="form-control"
+                           placeholder="email@example.com" />
+                </div>
+                <div id="amountCol0">
+                    <label class="form-label
+                        custom-only"
+                           style="display:none;">
+                        Amount (৳)
+                    </label>
+                    <input type="number"
+                           name="amounts"
+                           class="form-control
+                    custom-only"
+                           style="display:none;"
+                           placeholder="0"
+                           min="0" step="0.01" />
+                </div>
+                <div>
+                    <button type="button"
+                            onclick="addRow()"
+                            class="btn-primary-sm"
+                            style="margin-top:22px;">
+                        + Add
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button type="button"
+                class="add-row-btn"
+                onclick="addRow()">
+            + Add another person
+        </button>
+
+        <div style="margin-top:16px;">
+            <button type="submit"
+                    class="btn-primary-sm">
+                Create Split
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Existing splits -->
+@{
+    var splits = ViewBag.SplitOrders
+        as List<HungryHub.Models.SplitOrder>
+        ?? new List<HungryHub.Models.SplitOrder>();
+}
+
+@if (splits.Any())
+{
+    <div class="feature-card">
+        <h5>📋 My Split Orders</h5>
+        @foreach (var split in splits)
+        {
+            int paidCount = split.Participants
+                .Count(p => p.IsPaid);
+            int totalCount =
+                split.Participants.Count;
+
+            <div class="split-card">
+                <div class="split-header">
+                    <div>
+                        <div class="split-title">
+                            Order #@split.OrderId
+                            — @split.SplitType Split
+                        </div>
+                        <div style="font-size:0.78rem;
+                            color:var(--muted);
+                            margin-top:2px;">
+                            Total: ৳@split.TotalAmount
+                            .ToString("N0")
+                            &nbsp;|&nbsp;
+                            @paidCount/@totalCount paid
+                            &nbsp;|&nbsp;
+                            @split.CreatedAt
+                            .ToString("dd MMM yyyy")
+                        </div>
+                    </div>
+                    <form asp-controller="Features"
+                          asp-action="DeleteSplit"
+                          method="post"
+                          style="margin:0;"
+                          onsubmit="return confirm(
+                        'Delete this split?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden"
+                               name="splitOrderId"
+                               value="@split.SplitOrderId" />
+                        <button type="submit"
+                                class="btn-danger-sm">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+
+                @foreach (var p in
+                    split.Participants)
+                {
+                    <div class="participant-row">
+                        <span class="p-name">
+                            @p.Name
+                        </span>
+                        <span class="p-email">
+                            @p.Email
+                        </span>
+                        <span class="p-amount">
+                            ৳@p.AmountOwed
+                            .ToString("N0")
+                        </span>
+                        @if (p.IsPaid)
+                        {
+                            <span class="badge-paid">
+                                Paid
+                            </span>
+                        }
+                        else
+                        {
+                            <form asp-controller="Features"
+                                  asp-action="MarkPaid"
+                                  method="post"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="participantId"
+                                       value="@p.ParticipantId" />
+                                <button type="submit"
+                                        class="btn-success-sm">
+                                    Mark Paid
+                                </button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        var rowCount = 1;
+
+        function addRow() {
+            rowCount++;
+            var isCustom =
+                document.getElementById(
+                    'splitTypeSelect').value
+                === 'Custom';
+
+            var div = document.createElement('div');
+            div.className = 'participant-input-row';
+            div.style.cssText =
+                'display:grid;' +
+                'grid-template-columns:2fr 2fr 1fr auto;' +
+                'gap:10px;margin-bottom:8px;' +
+                'align-items:end;';
+
+            div.innerHTML =
+                '<div>' +
+                '<input type="text" name="names"' +
+                ' class="form-control"' +
+                ' placeholder="Person name"' +
+                ' required/></div>' +
+                '<div>' +
+                '<input type="email" name="emails"' +
+                ' class="form-control"' +
+                ' placeholder="email@example.com"/>' +
+                '</div>' +
+                '<div>' +
+                '<input type="number" name="amounts"' +
+                ' class="form-control custom-only"' +
+                ' style="display:' +
+                (isCustom ? 'block' : 'none') + ';"' +
+                ' placeholder="0"' +
+                ' min="0" step="0.01"/>' +
+                '</div>' +
+                '<div>' +
+                '<button type="button"' +
+                ' onclick="removeRow(this)"' +
+                ' class="btn-danger-sm"' +
+                ' style="margin-top:0;">✕</button>' +
+                '</div>';
+
+            document.getElementById(
+                'participantsContainer')
+                .appendChild(div);
+        }
+
+        function removeRow(btn) {
+            btn.closest(
+                '.participant-input-row').remove();
+        }
+
+        function toggleSplitType() {
+            var isCustom =
+                document.getElementById(
+                    'splitTypeSelect').value
+                === 'Custom';
+            document.querySelectorAll(
+                '.custom-only').forEach(function(el) {
+                    el.style.display =
+                        isCustom ? 'block' : 'none';
+                });
+        }
+    </script>
+}

@@ -1,0 +1,239 @@
+﻿@{
+    ViewData["Title"] = "Order Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string filterStatus = ViewBag.FilterStatus ?? "";
+    string searchVal = ViewBag.Search ?? "";
+}
+
+<div class="page-heading">Order Management</div>
+<div class="page-sub">
+    View all orders, update status or delete
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px; border:none;
+        margin-bottom:16px;">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Filter toolbar -->
+<div class="admin-table-card mb-4">
+    <div style="padding:16px 20px; display:flex;
+        gap:10px; flex-wrap:wrap;
+        align-items:center;">
+        <form method="get"
+              asp-controller="Admin"
+              asp-action="Orders"
+              style="display:flex; gap:10px;
+            flex-wrap:wrap; flex:1;">
+
+            <input type="text"
+                   name="search"
+                   value="@searchVal"
+                   class="form-control"
+                   placeholder="Search restaurant or address..."
+                   style="max-width:280px;" />
+
+            <select name="status"
+                    class="form-select"
+                    style="max-width:160px;"
+                    onchange="this.form.submit()">
+
+                @if (filterStatus == "")
+                {
+                    <option value="" selected>All Status</option>
+                }
+                else
+                {
+                    <option value="">All Status</option>
+                }
+
+                @if (filterStatus == "Confirmed")
+                {
+                    <option value="Confirmed" selected>
+                        Confirmed
+                    </option>
+                }
+                else
+                {
+                    <option value="Confirmed">Confirmed</option>
+                }
+
+                @if (filterStatus == "Delivered")
+                {
+                    <option value="Delivered" selected>
+                        Delivered
+                    </option>
+                }
+                else
+                {
+                    <option value="Delivered">Delivered</option>
+                }
+
+                @if (filterStatus == "Cancelled")
+                {
+                    <option value="Cancelled" selected>
+                        Cancelled
+                    </option>
+                }
+                else
+                {
+                    <option value="Cancelled">Cancelled</option>
+                }
+
+            </select>
+
+            <button type="submit" class="btn-admin">
+                Filter
+            </button>
+            <a href="/Admin/Orders"
+                   class="btn-admin"
+                   style="background:#f4f6fb;
+                color:var(--text);">
+                Reset
+            </a>
+        </form>
+    </div>
+</div>
+
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">Orders</div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#ID</th>
+                <th>User</th>
+                <th>Restaurant</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in
+                ViewBag.OrderList
+                as IEnumerable<dynamic>
+                ?? new List<dynamic>())
+            {
+                string sc =
+                    o.Status == "Confirmed" ? "s-confirmed" :
+                    o.Status == "Delivered" ? "s-delivered" :
+                    o.Status == "Cancelled" ? "s-cancelled" :
+                    "s-pending";
+
+                bool canUpdate =
+                    o.Status != "Delivered" &&
+                    o.Status != "Cancelled";
+
+                <tr>
+                    <td style="font-weight:700;">
+                        #@o.OrderId
+                    </td>
+                    <td style="font-size:0.8rem;
+                        color:var(--muted);">
+                        @o.UserEmail
+                    </td>
+                    <td style="font-weight:600;">
+                        @o.RestaurantName
+                    </td>
+                    <td>
+                        <span style="background:#f4f6fb;
+                            border-radius:6px;
+                            padding:2px 8px;
+                            font-size:0.8rem;">
+                            @o.ItemCount items
+                        </span>
+                    </td>
+                    <td style="font-weight:700;
+                        color:var(--primary);">
+                        &#2547;@string.Format(
+                                                    "{0:N0}", o.GrandTotal)
+                    </td>
+                    <td>
+                        <span class="status-badge @sc">
+                            @o.Status
+                        </span>
+                    </td>
+                    <td style="font-size:0.78rem;
+                        color:var(--muted);">
+                        @((DateTime)o.OrderDate)
+                        .ToString("dd MMM, HH:mm")
+                    </td>
+                    <td>
+                        <div style="display:flex;
+                            gap:6px; flex-wrap:wrap;">
+
+                            @if (canUpdate)
+                            {
+                                <!-- Mark Delivered -->
+                                <form asp-controller="Admin"
+                                      asp-action="UpdateOrderStatus"
+                                      method="post"
+                                      style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="orderId"
+                                           value="@o.OrderId" />
+                                    <input type="hidden"
+                                           name="newStatus"
+                                           value="Delivered" />
+                                    <button type="submit"
+                                            class="btn-success-sm">
+                                        Delivered
+                                    </button>
+                                </form>
+
+                                <!-- Cancel -->
+                                <form asp-controller="Admin"
+                                      asp-action="UpdateOrderStatus"
+                                      method="post"
+                                      style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="orderId"
+                                           value="@o.OrderId" />
+                                    <input type="hidden"
+                                           name="newStatus"
+                                           value="Cancelled" />
+                                    <button type="submit"
+                                            class="btn-danger-sm">
+                                        Cancel
+                                    </button>
+                                </form>
+                            }
+
+                            <!-- Delete -->
+                            <form asp-controller="Admin"
+                                  asp-action="DeleteOrder"
+                                  method="post"
+                                  style="margin:0;"
+                                  onsubmit="return confirm(
+                                'Delete order #@o.OrderId?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="orderId"
+                                       value="@o.OrderId" />
+                                <button type="submit"
+                                        class="btn-danger-sm">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

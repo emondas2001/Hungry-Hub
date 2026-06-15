@@ -1,0 +1,549 @@
+﻿@{
+    ViewData["Title"] = "Pre-Order Event";
+    Layout =
+        "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<style>
+    .page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .page-sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-top: 2px;
+        margin-bottom: 20px;
+    }
+
+    .feature-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+        .feature-card h5 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1.5px solid var(--border);
+        padding: 9px 13px;
+        font-size: 0.88rem;
+        font-family: 'Poppins',sans-serif;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(232,69,69,0.1);
+        }
+
+    .btn-primary-sm {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 8px 18px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Poppins',sans-serif;
+    }
+
+        .btn-primary-sm:hover {
+            background: var(--primary-dk);
+        }
+
+    .btn-danger-sm {
+        background: #fdecea;
+        border: 1.5px solid #f5c6c6;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #c62828;
+        cursor: pointer;
+        font-family: 'Poppins',sans-serif;
+    }
+
+    .status-badge {
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .s-pending {
+        background: #fff8e1;
+        color: #e65100;
+    }
+
+    .s-confirmed {
+        background: #e8f9ee;
+        color: #1d7044;
+    }
+
+    .s-cancelled {
+        background: #fdecea;
+        color: #c62828;
+    }
+
+    .preorder-card {
+        background: #f8f9ff;
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 14px;
+        border: 1.5px solid var(--border);
+    }
+
+    .item-input-row {
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr auto;
+        gap: 10px;
+        margin-bottom: 8px;
+        align-items: end;
+    }
+
+    .total-preview {
+        background: linear-gradient( 135deg,#1a1a2e,#e84545);
+        border-radius: 12px;
+        padding: 16px 20px;
+        color: #fff;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .add-item-btn {
+        background: none;
+        border: 1.5px dashed var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        width: 100%;
+        font-size: 0.83rem;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 8px;
+        font-family: 'Poppins',sans-serif;
+    }
+
+        .add-item-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+</style>
+
+<div class="page-title">🎉 Pre-Order Event</div>
+<div class="page-sub">
+    Book catering for your special events —
+    minimum 10 guests, 24hr advance notice
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px;border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:12px;border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Create pre-order form -->
+<div class="feature-card">
+    <h5>📋 New Event Pre-Order</h5>
+    <form asp-controller="Features"
+          asp-action="CreatePreOrder"
+          method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">
+                    Event Name *
+                </label>
+                <input type="text"
+                       name="EventName"
+                       class="form-control"
+                       placeholder="e.g. Birthday Party, Wedding Reception"
+                       required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">
+                    Restaurant *
+                </label>
+                <select name="RestaurantId"
+                        class="form-select"
+                        required>
+                    <option value="">
+                        -- Select restaurant --
+                    </option>
+                    @foreach (var r in
+                        ViewBag.Restaurants
+                        as IEnumerable<dynamic>
+                        ?? new List<dynamic>())
+                    {
+                        <option value="@r.RestaurantId">
+                            @r.Name (@r.Cuisine)
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">
+                    Event Date & Time *
+                </label>
+                <input type="datetime-local"
+                       name="EventDate"
+                       class="form-control"
+                       min="@DateTime.Now
+                .AddHours(24)
+                .ToString(" yyyy-MM-ddTHH:mm")"
+                       required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">
+                    Number of Guests *
+                </label>
+                <input type="number"
+                       name="GuestCount"
+                       class="form-control"
+                       placeholder="Minimum 10"
+                       min="10" max="500"
+                       required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">
+                    Event Address *
+                </label>
+                <input type="text"
+                       name="EventAddress"
+                       class="form-control"
+                       placeholder="Full event location"
+                       required />
+            </div>
+            <div class="col-12">
+                <label class="form-label">
+                    Special Requests
+                </label>
+                <textarea name="SpecialRequests"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Dietary requirements, decoration preferences...">
+                </textarea>
+            </div>
+        </div>
+
+        <!-- Menu items -->
+        <div style="font-size:0.9rem;
+            font-weight:700;
+            color:var(--text);
+            margin-bottom:10px;">
+            Menu Items
+        </div>
+
+        <div style="display:grid;
+            grid-template-columns:
+            3fr 1fr 1fr auto;
+            gap:10px;
+            margin-bottom:4px;">
+            <div style="font-size:0.78rem;
+                color:var(--muted);
+                font-weight:600;">
+                Item Name
+            </div>
+            <div style="font-size:0.78rem;
+                color:var(--muted);
+                font-weight:600;">
+                Qty
+            </div>
+            <div style="font-size:0.78rem;
+                color:var(--muted);
+                font-weight:600;">
+                Unit Price (৳)
+            </div>
+            <div></div>
+        </div>
+
+        <div id="itemsContainer">
+            <div class="item-input-row">
+                <input type="text"
+                       name="itemNames"
+                       class="form-control"
+                       placeholder="e.g. Mutton Kacchi" />
+                <input type="number"
+                       name="quantities"
+                       class="form-control"
+                       placeholder="50" min="1" />
+                <input type="number"
+                       name="prices"
+                       class="form-control"
+                       placeholder="320"
+                       min="0" step="0.01"
+                       oninput="updateTotal()" />
+                <button type="button"
+                        onclick="addItemRow()"
+                        class="btn-primary-sm">
+                    +
+                </button>
+            </div>
+        </div>
+
+        <button type="button"
+                class="add-item-btn"
+                onclick="addItemRow()">
+            + Add menu item
+        </button>
+
+        <div class="total-preview">
+            <div>
+                <div style="font-size:0.78rem;
+                    opacity:0.8;">
+                    Estimated Total
+                </div>
+                <div style="font-size:1.5rem;
+                    font-weight:700;"
+                     id="totalPreview">
+                    ৳0
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.78rem;
+                    opacity:0.8;">
+                    Advance (30%)
+                </div>
+                <div style="font-size:1.2rem;
+                    font-weight:700;"
+                     id="advancePreview">
+                    ৳0
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:16px;">
+            <button type="submit"
+                    class="btn-primary-sm">
+                Submit Pre-Order
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- Existing pre-orders -->
+@{
+    var preOrders = ViewBag.PreOrders
+        as List<HungryHub.Models.PreOrder>
+        ?? new List<HungryHub.Models.PreOrder>();
+}
+
+@if (preOrders.Any())
+{
+    <div class="feature-card">
+        <h5>📦 My Pre-Orders</h5>
+        @foreach (var po in preOrders)
+        {
+            string sc = po.Status switch
+            {
+                "Confirmed" => "s-confirmed",
+                "Cancelled" => "s-cancelled",
+                _ => "s-pending"
+            };
+
+            <div class="preorder-card">
+                <div style="display:flex;
+                    align-items:flex-start;
+                    justify-content:space-between;
+                    flex-wrap:wrap;
+                    gap:10px;">
+                    <div>
+                        <div style="font-weight:700;
+                            font-size:0.97rem;">
+                            🎉 @po.EventName
+                        </div>
+                        <div style="font-size:0.82rem;
+                            color:var(--muted);
+                            margin-top:4px;">
+                            📅 @po.EventDate
+                            .ToString(
+                            "dd MMM yyyy, hh:mm tt")
+                            &nbsp;|&nbsp;
+                            🍽️ @po.RestaurantName
+                            &nbsp;|&nbsp;
+                            👥 @po.GuestCount guests
+                        </div>
+                        <div style="font-size:0.82rem;
+                            color:var(--muted);
+                            margin-top:2px;">
+                            📍 @po.EventAddress
+                        </div>
+                        @if (!string.IsNullOrEmpty(
+                            po.AdminNote))
+                        {
+                            <div style="background:#fff8e1;
+                                border-radius:8px;
+                                padding:8px 12px;
+                                margin-top:8px;
+                                font-size:0.82rem;
+                                color:#5d4037;">
+                                💬 Admin note:
+                                @po.AdminNote
+                            </div>
+                        }
+                    </div>
+                    <div style="text-align:right;">
+                        <span class="status-badge @sc">
+                            @po.Status
+                        </span>
+                        <div style="font-size:0.85rem;
+                            font-weight:700;
+                            color:var(--primary);
+                            margin-top:6px;">
+                            Total: ৳@po.TotalAmount
+                            .ToString("N0")
+                        </div>
+                        <div style="font-size:0.75rem;
+                            color:var(--muted);">
+                            Advance: ৳@po.AdvanceAmount
+                            .ToString("N0")
+                        </div>
+                        @if (po.Status == "Pending")
+                        {
+                            <form asp-controller="Features"
+                                  asp-action="CancelPreOrder"
+                                  method="post"
+                                  style="margin-top:8px;"
+                                  onsubmit="return confirm(
+                                'Cancel this pre-order?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="preOrderId"
+                                       value="@po.PreOrderId" />
+                                <button type="submit"
+                                        class="btn-danger-sm">
+                                    Cancel
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+
+                @if (po.Items.Any())
+                {
+                    <div style="margin-top:12px;
+                        padding-top:10px;
+                        border-top:1px solid
+                        var(--border);">
+                        @foreach (var item in po.Items)
+                        {
+                            <div style="display:flex;
+                                justify-content:space-between;
+                                font-size:0.82rem;
+                                padding:3px 0;">
+                                <span>
+                                    @item.ItemName
+                                    x@item.Quantity
+                                </span>
+                                <span style="font-weight:600;">
+                                    ৳@item.SubTotal
+                                    .ToString("N0")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function addItemRow() {
+            var container =
+                document.getElementById(
+                    'itemsContainer');
+            var div = document.createElement('div');
+            div.className = 'item-input-row';
+            div.innerHTML =
+                '<input type="text"' +
+                ' name="itemNames"' +
+                ' class="form-control"' +
+                ' placeholder="Item name"/>' +
+                '<input type="number"' +
+                ' name="quantities"' +
+                ' class="form-control"' +
+                ' placeholder="10" min="1"/>' +
+                '<input type="number"' +
+                ' name="prices"' +
+                ' class="form-control"' +
+                ' placeholder="0"' +
+                ' min="0" step="0.01"' +
+                ' oninput="updateTotal()"/>' +
+                '<button type="button"' +
+                ' onclick="this.closest' +
+                "('.item-input-row')" +
+                '.remove();updateTotal()"' +
+                ' class="btn-danger-sm">✕</button>';
+            container.appendChild(div);
+        }
+
+        function updateTotal() {
+            var qtys = document
+                .querySelectorAll(
+                    '[name="quantities"]');
+            var prices = document
+                .querySelectorAll('[name="prices"]');
+            var total = 0;
+            for (var i = 0;
+                 i < Math.min(qtys.length,
+                              prices.length); i++) {
+                var q = parseFloat(qtys[i].value)
+                    || 0;
+                var p = parseFloat(prices[i].value)
+                    || 0;
+                total += q * p;
+            }
+            document.getElementById('totalPreview')
+                .textContent =
+                '৳' + total.toFixed(0);
+            document.getElementById('advancePreview')
+                .textContent =
+                '৳' + (total * 0.3).toFixed(0);
+        }
+    </script>
+}

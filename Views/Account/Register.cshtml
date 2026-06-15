@@ -1,0 +1,701 @@
+﻿@model HungryHub.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Register - HungryHub";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet"/>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(135deg, #fff5f5 0%, #f8f5f0 100%);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+
+        .brand {
+            color: #e84545;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
+        .brand span { color: #333; }
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+            padding: 40px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #444;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            border: 1.5px solid #e0e0e0;
+            padding: 10px 14px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #e84545;
+            box-shadow: 0 0 0 3px rgba(232,69,69,0.12);
+            outline: none;
+        }
+
+        /* ── Email field states ── */
+        .email-wrap { position: relative; }
+
+        .email-status-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            display: none;
+        }
+
+        .form-control.email-valid {
+            border-color: #4caf50;
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.12);
+            padding-right: 40px;
+        }
+
+        .form-control.email-invalid {
+            border-color: #e84545;
+            box-shadow: 0 0 0 3px rgba(232,69,69,0.12);
+            padding-right: 40px;
+        }
+
+        .email-feedback {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            min-height: 18px;
+            transition: all 0.2s;
+        }
+
+        .email-feedback.valid   { color: #4caf50; }
+        .email-feedback.invalid { color: #e84545; }
+
+        /* Provider badge */
+        .provider-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0fff4;
+            border: 1px solid #c3e6cb;
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-top: 6px;
+        }
+
+        /* ── Input with icon ── */
+        .has-icon { position: relative; }
+        .has-icon .form-control { padding-left: 36px; }
+        .field-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bbb;
+            font-size: 15px;
+            pointer-events: none;
+        }
+
+        /* ── Gender cards ── */
+        .gender-group { display: flex; gap: 10px; }
+        .gender-option { flex: 1; position: relative; }
+        .gender-option input[type="radio"] {
+            position: absolute; opacity: 0; width: 0;
+        }
+        .gender-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #555;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .gender-option input[type="radio"]:checked + label {
+            border-color: #e84545;
+            background: #fff5f5;
+            color: #e84545;
+            font-weight: 600;
+        }
+        .gender-option label:hover {
+            border-color: #e84545;
+            background: #fff5f5;
+        }
+
+        /* ── Password strength ── */
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 6px;
+            transition: all 0.3s;
+            background: #eee;
+        }
+        .strength-text { font-size: 0.78rem; margin-top: 4px; }
+
+        /* ── Input group eye toggle ── */
+        .input-group .form-control {
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+        }
+        .btn-eye {
+            border: 1.5px solid #e0e0e0;
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            background: #fff;
+            padding: 0 14px;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .btn-eye:hover { color: #e84545; }
+
+        /* ── Submit button ── */
+        .btn-register {
+            background: #e84545;
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        .btn-register:hover  { background: #c73535; transform: translateY(-1px); }
+        .btn-register:active { transform: translateY(0); }
+        .btn-register:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        .login-link a {
+            color: #e84545;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .login-link a:hover { text-decoration: underline; }
+
+        /* ── Allowed providers info box ── */
+        .providers-info {
+            background: #f8f9ff;
+            border: 1.5px solid #e0e4ff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .providers-info strong { color: #333; display: block; margin-bottom:6px; }
+        .provider-chip {
+            display: inline-block;
+            background: #fff;
+            border: 1px solid #dde;
+            border-radius: 20px;
+            padding: 2px 10px;
+            margin: 2px 3px 2px 0;
+            font-size: 0.75rem;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-2">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7 col-xl-6">
+
+            <!-- Brand -->
+            <div class="text-center mb-4">
+                <div class="brand">🍔 Hungry<span>Hub</span></div>
+                <p class="text-muted mt-1" style="font-size:0.95rem;">
+                    Create your account and start ordering delicious food!
+                </p>
+            </div>
+
+            <!-- Server-side validation summary -->
+            @if (!ViewData.ModelState.IsValid &&
+                 ViewData.ModelState.ErrorCount > 0)
+            {
+                <div class="alert alert-danger alert-dismissible fade show"
+                     style="border-radius:12px; border:none;"
+                     role="alert">
+                    <strong>Please fix the following errors:</strong>
+                    <ul class="mb-0 mt-1 ps-3">
+                        @foreach (var state in ViewData.ModelState.Values)
+                        {
+                            foreach (var error in state.Errors)
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        }
+                    </ul>
+                    <button type="button" class="btn-close"
+                            data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="section-title">Create Your Account</div>
+
+                <form asp-controller="Account"
+                      asp-action="Register"
+                      method="post"
+                      id="registerForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- First Name + Last Name -->
+                    <div class="row mb-3">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                            <label asp-for="FirstName" class="form-label">
+                                First Name *
+                            </label>
+                            <div class="has-icon">
+                                <span class="field-icon">👤</span>
+                                <input asp-for="FirstName"
+                                       class="form-control"
+                                       placeholder="John"
+                                       autocomplete="given-name"/>
+                            </div>
+                            <span asp-validation-for="FirstName"
+                                  class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="LastName" class="form-label">
+                                Last Name *
+                            </label>
+                            <div class="has-icon">
+                                <span class="field-icon">👤</span>
+                                <input asp-for="LastName"
+                                       class="form-control"
+                                       placeholder="Doe"
+                                       autocomplete="family-name"/>
+                            </div>
+                            <span asp-validation-for="LastName"
+                                  class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Email with live validation -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">
+                            Email Address *
+                        </label>
+                        <div class="email-wrap">
+                            <input asp-for="Email"
+                                   class="form-control"
+                                   id="emailInput"
+                                   placeholder="yourname@gmail.com"
+                                   autocomplete="email"
+                                   oninput="validateEmail(this.value)"
+                                   onblur="validateEmail(this.value)"/>
+                            <span class="email-status-icon"
+                                  id="emailIcon"></span>
+                        </div>
+                        <!-- Live feedback message -->
+                        <div class="email-feedback"
+                             id="emailFeedback"></div>
+                        <!-- Provider badge (shown when valid) -->
+                        <div id="providerBadge" style="display:none;">
+                            <span class="provider-badge">
+                                <span id="providerIcon"></span>
+                                <span id="providerName"></span>
+                                Authorized
+                            </span>
+                        </div>
+                        <!-- Server-side error -->
+                        <span asp-validation-for="Email"
+                              class="text-danger small"></span>
+
+                        <!-- Accepted providers info -->
+                        <div class="providers-info mt-2">
+                            <strong>Accepted email providers:</strong>
+                            <span class="provider-chip">Gmail</span>
+                            <span class="provider-chip">Outlook</span>
+                            <span class="provider-chip">Hotmail</span>
+                            <span class="provider-chip">Yahoo</span>
+                            <span class="provider-chip">iCloud</span>
+                            <span class="provider-chip">Live</span>
+                            <span class="provider-chip">ProtonMail</span>
+                            <span class="provider-chip">Zoho</span>
+                            <span class="provider-chip">AOL</span>
+                            <span class="provider-chip">GMX</span>
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label">
+                            Phone Number *
+                        </label>
+                        <div class="has-icon">
+                            <span class="field-icon">📞</span>
+                            <input asp-for="PhoneNumber"
+                                   class="form-control"
+                                   placeholder="+880 1700 000000"
+                                   autocomplete="tel"/>
+                        </div>
+                        <span asp-validation-for="PhoneNumber"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="mb-3">
+                        <label class="form-label">Gender *</label>
+                        <div class="gender-group">
+                            <div class="gender-option">
+                                <input type="radio" name="Gender"
+                                       id="gMale" value="Male"
+                                       @(Model?.Gender == "Male" ? "checked" : "")/>
+                                <label for="gMale">Male</label>
+                            </div>
+                            <div class="gender-option">
+                                <input type="radio" name="Gender"
+                                       id="gFemale" value="Female"
+                                       @(Model?.Gender == "Female" ? "checked" : "")/>
+                                <label for="gFemale">Female</label>
+                            </div>
+                            <div class="gender-option">
+                                <input type="radio" name="Gender"
+                                       id="gOther" value="Other"
+                                       @(Model?.Gender == "Other" ? "checked" : "")/>
+                                <label for="gOther">Other</label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="Gender"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="mb-3">
+                        <label asp-for="DateOfBirth" class="form-label">
+                            Date of Birth *
+                        </label>
+                        <div class="has-icon">
+                            <span class="field-icon">📅</span>
+                            <input asp-for="DateOfBirth"
+                                   type="date"
+                                   class="form-control"
+                                   min="1900-01-01"
+                                   max="@DateTime.Now.AddYears(-13)
+                                                .ToString("yyyy-MM-dd")"/>
+                        </div>
+                        <span asp-validation-for="DateOfBirth"
+                              class="text-danger small"></span>
+                        <div class="form-text text-muted"
+                             style="font-size:0.8rem;">
+                            You must be at least 13 years old to register.
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">
+                            Password *
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="Password"
+                                   type="password"
+                                   class="form-control"
+                                   placeholder="Min. 6 characters"
+                                   id="passwordInput"
+                                   oninput="checkStrength(this.value)"
+                                   autocomplete="new-password"/>
+                            <button type="button" class="btn-eye"
+                                    onclick="togglePass('passwordInput',this)">
+                                👁
+                            </button>
+                        </div>
+                        <div class="password-strength"
+                             id="strengthBar"></div>
+                        <div class="strength-text text-muted"
+                             id="strengthText"></div>
+                        <span asp-validation-for="Password"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label">
+                            Confirm Password *
+                        </label>
+                        <div class="input-group">
+                            <input asp-for="ConfirmPassword"
+                                   type="password"
+                                   class="form-control"
+                                   placeholder="Repeat your password"
+                                   id="confirmInput"
+                                   oninput="checkMatch()"
+                                   autocomplete="new-password"/>
+                            <button type="button" class="btn-eye"
+                                    onclick="togglePass('confirmInput',this)">
+                                👁
+                            </button>
+                        </div>
+                        <div class="strength-text"
+                             id="matchText"></div>
+                        <span asp-validation-for="ConfirmPassword"
+                              class="text-danger small"></span>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit"
+                            class="btn-register"
+                            id="submitBtn">
+                        Create My Account
+                    </button>
+
+                </form>
+
+                <div class="login-link">
+                    Already have an account?
+                    <a asp-controller="Account"
+                       asp-action="Login">Login here</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+<script>
+    // ── Allowed domains (mirrors server-side list) ──────────
+    var allowedDomains = {
+        'gmail.com':       { name: 'Gmail',       icon: '🔵' },
+        'googlemail.com':  { name: 'Gmail',        icon: '🔵' },
+        'outlook.com':     { name: 'Outlook',      icon: '🔷' },
+        'hotmail.com':     { name: 'Hotmail',      icon: '🔷' },
+        'hotmail.co.uk':   { name: 'Hotmail',      icon: '🔷' },
+        'hotmail.fr':      { name: 'Hotmail',      icon: '🔷' },
+        'live.com':        { name: 'Live',         icon: '🔷' },
+        'live.co.uk':      { name: 'Live',         icon: '🔷' },
+        'msn.com':         { name: 'MSN',          icon: '🔷' },
+        'windowslive.com': { name: 'Windows Live', icon: '🔷' },
+        'yahoo.com':       { name: 'Yahoo',        icon: '🟣' },
+        'yahoo.co.uk':     { name: 'Yahoo',        icon: '🟣' },
+        'yahoo.co.in':     { name: 'Yahoo',        icon: '🟣' },
+        'yahoo.fr':        { name: 'Yahoo',        icon: '🟣' },
+        'yahoo.de':        { name: 'Yahoo',        icon: '🟣' },
+        'yahoo.com.au':    { name: 'Yahoo',        icon: '🟣' },
+        'ymail.com':       { name: 'Yahoo',        icon: '🟣' },
+        'icloud.com':      { name: 'iCloud',       icon: '⬜' },
+        'me.com':          { name: 'Apple Mail',   icon: '⬜' },
+        'mac.com':         { name: 'Apple Mail',   icon: '⬜' },
+        'protonmail.com':  { name: 'ProtonMail',   icon: '🟤' },
+        'proton.me':       { name: 'ProtonMail',   icon: '🟤' },
+        'pm.me':           { name: 'ProtonMail',   icon: '🟤' },
+        'zoho.com':        { name: 'Zoho',         icon: '🟠' },
+        'aol.com':         { name: 'AOL',          icon: '🟡' },
+        'mail.com':        { name: 'Mail.com',     icon: '📧' },
+        'gmx.com':         { name: 'GMX',          icon: '📧' },
+        'gmx.net':         { name: 'GMX',          icon: '📧' },
+        'tutanota.com':    { name: 'Tutanota',     icon: '🔐' },
+        'imap.com':        { name: 'IMAP',         icon: '📧' },
+    };
+
+    var emailIsValid = false;
+
+    function validateEmail(value) {
+        var input    = document.getElementById('emailInput');
+        var feedback = document.getElementById('emailFeedback');
+        var icon     = document.getElementById('emailIcon');
+        var badge    = document.getElementById('providerBadge');
+        var submitBtn = document.getElementById('submitBtn');
+
+        // Reset
+        input.classList.remove('email-valid', 'email-invalid');
+        icon.style.display = 'none';
+        badge.style.display = 'none';
+        feedback.className = 'email-feedback';
+
+        if (!value || value.trim() === '') {
+            feedback.textContent = '';
+            emailIsValid = false;
+            submitBtn.disabled = false;
+            return;
+        }
+
+        // Basic format check
+        var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        if (!emailRegex.test(value)) {
+            input.classList.add('email-invalid');
+            icon.textContent   = '❌';
+            icon.style.display = 'block';
+            feedback.textContent = 'Please enter a valid email format.';
+            feedback.classList.add('invalid');
+            emailIsValid = false;
+            submitBtn.disabled = true;
+            return;
+        }
+
+        // Extract domain
+        var parts  = value.split('@@');
+        var domain = parts[parts.length - 1].toLowerCase().trim();
+
+        if (allowedDomains[domain]) {
+            // Valid authorized provider
+            input.classList.add('email-valid');
+            icon.textContent   = '✅';
+            icon.style.display = 'block';
+
+            var provider = allowedDomains[domain];
+            feedback.textContent = 'Great! ' + provider.name
+                                 + ' is an authorized email provider.';
+            feedback.classList.add('valid');
+
+            document.getElementById('providerIcon').textContent =
+                provider.icon;
+            document.getElementById('providerName').textContent =
+                provider.name;
+            badge.style.display = 'block';
+
+            emailIsValid = true;
+            submitBtn.disabled = false;
+
+        } else {
+            // Domain not in allowed list
+            input.classList.add('email-invalid');
+            icon.textContent   = '❌';
+            icon.style.display = 'block';
+            feedback.textContent = '"' + domain + '" is not an authorized'
+                + ' email provider. Please use Gmail, Outlook, Yahoo,'
+                + ' or another recognized service.';
+            feedback.classList.add('invalid');
+            emailIsValid = false;
+            submitBtn.disabled = true;
+        }
+    }
+
+    // Password show/hide 
+    function togglePass(inputId, btn) {
+        var input = document.getElementById(inputId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.textContent = input.type === 'password' ? '👁' : '🙈';
+    }
+
+    // Password strength 
+    function checkStrength(value) {
+        var bar  = document.getElementById('strengthBar');
+        var text = document.getElementById('strengthText');
+        var strength = 0;
+
+        if (value.length >= 6)           strength++;
+        if (value.length >= 10)          strength++;
+        if (/[A-Z]/.test(value))         strength++;
+        if (/[0-9]/.test(value))         strength++;
+        if (/[^A-Za-z0-9]/.test(value))  strength++;
+
+        var levels = [
+            { color: '#eee',    label: '',               width: '0%'   },
+            { color: '#e84545', label: 'Weak',           width: '25%'  },
+            { color: '#ff9800', label: 'Fair',           width: '50%'  },
+            { color: '#2196f3', label: 'Good',           width: '75%'  },
+            { color: '#4caf50', label: 'Strong',         width: '90%'  },
+            { color: '#4caf50', label: 'Very strong',    width: '100%' },
+        ];
+
+        var lvl = levels[Math.min(strength, 5)];
+        bar.style.background = lvl.color;
+        bar.style.width      = value.length > 0 ? lvl.width : '0';
+        bar.style.height     = value.length > 0 ? '4px' : '0';
+        text.textContent     = value.length > 0 ? lvl.label : '';
+        text.style.color     = lvl.color;
+
+        checkMatch();
+    }
+
+    // Password match
+    function checkMatch() {
+        var pass    = document.getElementById('passwordInput').value;
+        var confirm = document.getElementById('confirmInput').value;
+        var matchEl = document.getElementById('matchText');
+
+        if (confirm.length === 0) {
+            matchEl.textContent = '';
+            return;
+        }
+
+        if (pass === confirm) {
+            matchEl.textContent = 'Passwords match';
+            matchEl.style.color = '#4caf50';
+        } else {
+            matchEl.textContent = 'Passwords do not match';
+            matchEl.style.color = '#e84545';
+        }
+    }
+
+    // Block form submit if email invalid 
+    document.getElementById('registerForm')
+            .addEventListener('submit', function(e) {
+        var emailVal = document.getElementById('emailInput').value;
+        validateEmail(emailVal);
+
+        if (!emailIsValid) {
+            e.preventDefault();
+            document.getElementById('emailInput').focus();
+            document.getElementById('emailFeedback').textContent =
+                'Please enter a valid authorized email address before submitting.';
+            document.getElementById('emailFeedback').className =
+                'email-feedback invalid';
+        }
+    });
+
+    
+    window.addEventListener('load', function() {
+        var val = document.getElementById('emailInput').value;
+        if (val) validateEmail(val);
+    });
+</script>
+</body>
+</html>

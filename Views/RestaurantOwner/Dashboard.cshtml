@@ -1,0 +1,291 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout =
+        "~/Views/Shared/_OwnerLayout.cshtml";
+
+    var rest =
+        ViewBag.Restaurant
+        as HungryHub.Models.RestaurantDb;
+}
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:10px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<div class="page-heading">
+    Welcome, @ViewBag.OwnerName 👋
+</div>
+<div class="page-sub">
+    @(rest?.Name ?? "Your Restaurant") —
+    @DateTime.Now.ToString("dddd, dd MMMM yyyy")
+</div>
+
+<!-- Restaurant status banner -->
+<div style="background:@(rest?.IsOpen == true
+             ? "linear-gradient(135deg,#1d7044,#51cf66)"
+             : "linear-gradient(135deg,#c62828,#e84545)");
+    border-radius:16px;
+    padding:18px 22px;
+    color:#fff;
+    margin-bottom:22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;">
+    <div>
+        <div style="font-size:1.1rem;
+            font-weight:700;">
+            Restaurant is currently
+            @(rest?.IsOpen == true
+                ? "OPEN 🟢"
+                : "CLOSED 🔴")
+        </div>
+        <div style="font-size:0.83rem;
+            opacity:0.85;
+            margin-top:3px;">
+            @rest?.Address
+        </div>
+    </div>
+    <form asp-controller="RestaurantOwner"
+          asp-action="ToggleOpen"
+          method="post"
+          style="margin:0;">
+        @Html.AntiForgeryToken()
+        <button type="submit"
+                style="background:rgba(255,255,255,0.2);
+            border:1.5px solid
+            rgba(255,255,255,0.5);
+            border-radius:10px;
+            color:#fff;
+            padding:9px 18px;
+            font-size:0.88rem;
+            font-weight:700;
+            cursor:pointer;
+            font-family:'Poppins',
+            sans-serif;">
+            @(rest?.IsOpen == true
+                ? "Close Restaurant"
+                : "Open Restaurant")
+        </button>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="stat-row">
+    <div class="stat-box">
+        <div class="stat-val">
+            @(ViewBag.TotalMenuItems ?? 0)
+        </div>
+        <div class="stat-lbl">Menu Items</div>
+    </div>
+    <div class="stat-box"
+         style="border-left-color:#339af0;">
+        <div class="stat-val"
+             style="color:#339af0;">
+            @(ViewBag.TotalOrders ?? 0)
+        </div>
+        <div class="stat-lbl">Total Orders</div>
+    </div>
+    <div class="stat-box"
+         style="border-left-color:#f59f00;">
+        <div class="stat-val"
+             style="color:#f59f00;">
+            @(ViewBag.TodayOrders ?? 0)
+        </div>
+        <div class="stat-lbl">Today's Orders</div>
+    </div>
+    <div class="stat-box"
+         style="border-left-color:#1d7044;">
+        <div class="stat-val"
+             style="color:#1d7044;">
+            ৳@string.Format("{0:N0}",
+                            ViewBag.TotalRevenue ?? 0)
+        </div>
+        <div class="stat-lbl">Total Revenue</div>
+    </div>
+    <div class="stat-box"
+         style="border-left-color:#cc5de8;">
+        <div class="stat-val"
+             style="color:#cc5de8;">
+            @ViewBag.AvgRating ⭐
+        </div>
+        <div class="stat-lbl">Avg Rating</div>
+    </div>
+</div>
+
+<!-- Recent orders -->
+<div class="owner-card">
+    <h5>📦 Recent Orders</h5>
+    @{
+        var recentOrders =
+            ViewBag.RecentOrders
+            as IEnumerable<dynamic>
+            ?? new List<dynamic>();
+    }
+    @if (!recentOrders.Any())
+    {
+        <p style="color:var(--muted);
+            text-align:center;
+            padding:20px 0;">
+            No orders yet.
+        </p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>#Order</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in recentOrders)
+                {
+                    string sc =
+                        o.Status == "Confirmed"
+                            ? "s-confirmed"
+                        : o.Status == "Delivered"
+                            ? "s-delivered"
+                        : o.Status == "Cancelled"
+                            ? "s-cancelled"
+                        : "s-pending";
+
+                    <tr>
+                        <td style="font-weight:700;">
+                            #@o.OrderId
+                        </td>
+                        <td style="font-size:0.8rem;
+                            color:var(--muted);">
+                            @o.UserEmail
+                        </td>
+                        <td style="font-weight:700;
+                            color:var(--primary);">
+                            ৳@string.Format(
+                                                            "{0:N0}", o.GrandTotal)
+                        </td>
+                        <td>
+                            <span class="status-badge
+                                @sc">
+                                @o.Status
+                            </span>
+                        </td>
+                        <td style="font-size:0.78rem;
+                            color:var(--muted);">
+                            @((DateTime)o.OrderDate)
+                            .ToString(
+                            "dd MMM, HH:mm")
+                        </td>
+                        <td>
+                            @if (o.Status !=
+                                 "Delivered" &&
+                                 o.Status !=
+                                 "Cancelled")
+                            {
+                                <form asp-controller="RestaurantOwner"
+                                      asp-action="UpdateOrderStatus"
+                                      method="post"
+                                      style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="orderId"
+                                           value="@o.OrderId" />
+                                    <input type="hidden"
+                                           name="newStatus"
+                                           value="Delivered" />
+                                    <button type="submit"
+                                            class="btn-success-o">
+                                        Mark Delivered
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <div style="margin-top:12px;">
+        <a asp-controller="RestaurantOwner"
+           asp-action="Orders"
+           style="color:var(--primary);
+            font-size:0.83rem;
+            font-weight:600;
+            text-decoration:none;">
+            View all orders →
+        </a>
+    </div>
+</div>
+
+<!-- Recent reviews -->
+<div class="owner-card">
+    <h5>⭐ Recent Reviews</h5>
+    @{
+        var recentRatings =
+            ViewBag.RecentRatings
+            as IEnumerable<dynamic>
+            ?? new List<dynamic>();
+    }
+    @if (!recentRatings.Any())
+    {
+        <p style="color:var(--muted);
+            text-align:center;
+            padding:20px 0;">
+            No reviews yet.
+        </p>
+    }
+    else
+    {
+        @foreach (var r in recentRatings)
+        {
+            <div style="padding:12px 0;
+                border-bottom:1px solid
+                var(--border);">
+                <div style="display:flex;
+                    align-items:center;
+                    gap:10px;
+                    margin-bottom:4px;">
+                    <span style="color:#f59f00;
+                        font-weight:700;">
+                        @for (int s = 1; s <= 5; s++)
+                        {
+                            @(s <= (int)r.Stars
+                                ? "⭐" : "☆")
+                        }
+                    </span>
+                    <span style="font-size:0.78rem;
+                        color:var(--muted);">
+                        @r.UserEmail
+                    </span>
+                    <span style="font-size:0.75rem;
+                        color:var(--muted);
+                        margin-left:auto;">
+                        @((DateTime)r.RatedAt)
+                        .ToString("dd MMM yyyy")
+                    </span>
+                </div>
+                @if (!string.IsNullOrEmpty(
+                    (string)r.Comment))
+                {
+                    <div style="font-size:0.85rem;
+                        color:var(--text);">
+                        "@r.Comment"
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

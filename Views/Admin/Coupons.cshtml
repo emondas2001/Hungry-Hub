@@ -1,0 +1,647 @@
+﻿@{
+    ViewData["Title"] = "Coupon Management";
+    Layout =
+        "~/Views/Shared/_AdminLayout.cshtml";
+
+    var couponList =
+        ViewBag.CouponList
+        as List<HungryHub.Models.Coupon>
+        ?? new List<HungryHub.Models.Coupon>();
+}
+
+<div class="page-heading">
+    Coupon Management
+</div>
+<div class="page-sub">
+    Create and manage discount coupon offers
+    for users
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:12px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<!-- Create coupon form -->
+<div class="admin-table-card mb-4">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            ➕ Create New Coupon
+        </div>
+        <button class="btn-admin"
+                onclick="toggleCreateForm()">
+            + New Coupon
+        </button>
+    </div>
+
+    <div id="createForm"
+         style="display:none; padding:22px;">
+        <form asp-controller="Admin"
+              asp-action="CreateCoupon"
+              method="post">
+            @Html.AntiForgeryToken()
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Coupon Code *
+                    </label>
+                    <input type="text"
+                           name="code"
+                           class="form-control"
+                           placeholder="e.g. SAVE20"
+                           required
+                           style="text-transform:
+                    uppercase;
+                    letter-spacing:1px;" />
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Title *
+                    </label>
+                    <input type="text"
+                           name="title"
+                           class="form-control"
+                           placeholder="e.g. Weekend Special"
+                           required />
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Discount Type *
+                    </label>
+                    <select name="discountType"
+                            class="form-select"
+                            id="discountTypeSelect"
+                            onchange="toggleDiscountType()">
+                        <option value="Flat">
+                            Flat (৳)
+                        </option>
+                        <option value="Percent">
+                            Percentage (%)
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;"
+                           id="discountValueLabel">
+                        Discount Amount (৳) *
+                    </label>
+                    <input type="number"
+                           name="discountValue"
+                           class="form-control"
+                           placeholder="50"
+                           min="0" step="0.01"
+                           required />
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Min Order Amount (৳)
+                    </label>
+                    <input type="number"
+                           name="minOrderAmount"
+                           class="form-control"
+                           value="0"
+                           min="0" />
+                </div>
+
+                <div class="col-md-3"
+                     id="maxDiscountWrap"
+                     style="display:none;">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Max Discount Cap (৳)
+                    </label>
+                    <input type="number"
+                           name="maxDiscount"
+                           class="form-control"
+                           value="0"
+                           min="0" />
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Usage Limit
+                    </label>
+                    <input type="number"
+                           name="usageLimit"
+                           class="form-control"
+                           value="100"
+                           min="1" />
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Start Date *
+                    </label>
+                    <input type="datetime-local"
+                           name="startDate"
+                           class="form-control"
+                           value="@DateTime.Now
+                    .ToString(" yyyy-MM-ddTHH:mm")"
+                           required />
+                </div>
+
+                <div class="col-md-3">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Expiry Date *
+                    </label>
+                    <input type="datetime-local"
+                           name="expiryDate"
+                           class="form-control"
+                           value="@DateTime.Now
+                    .AddMonths(1)
+                    .ToString(" yyyy-MM-ddTHH:mm")"
+                           required />
+                </div>
+
+                <div class="col-12">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Description
+                    </label>
+                    <input type="text"
+                           name="description"
+                           class="form-control"
+                           placeholder="e.g. Get 20% off on orders above ৳300" />
+                </div>
+
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn-admin">
+                        Create Coupon
+                    </button>
+                    <button type="button"
+                            class="btn-admin"
+                            style="background:#f4f6fb;
+                        color:var(--text);
+                        margin-left:8px;"
+                            onclick="toggleCreateForm()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit coupon modal form (hidden) -->
+<div id="editFormWrap"
+     style="display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;">
+    <div style="background:#fff;
+        border-radius:20px;
+        padding:28px;
+        max-width:640px;
+        width:90%;
+        max-height:90vh;
+        overflow-y:auto;">
+        <div style="font-size:1rem;
+            font-weight:700;
+            margin-bottom:18px;
+            color:var(--text);">
+            ✏️ Edit Coupon
+        </div>
+        <form asp-controller="Admin"
+              asp-action="UpdateCoupon"
+              method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   name="couponId"
+                   id="editCouponId" />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Title *
+                    </label>
+                    <input type="text"
+                           name="title"
+                           id="editTitle"
+                           class="form-control"
+                           required />
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Discount Value *
+                    </label>
+                    <input type="number"
+                           name="discountValue"
+                           id="editDiscountValue"
+                           class="form-control"
+                           min="0" step="0.01"
+                           required />
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Min Order (৳)
+                    </label>
+                    <input type="number"
+                           name="minOrderAmount"
+                           id="editMinOrder"
+                           class="form-control"
+                           min="0" />
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Max Discount (৳)
+                    </label>
+                    <input type="number"
+                           name="maxDiscount"
+                           id="editMaxDiscount"
+                           class="form-control"
+                           min="0" />
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Usage Limit
+                    </label>
+                    <input type="number"
+                           name="usageLimit"
+                           id="editUsageLimit"
+                           class="form-control"
+                           min="1" />
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Start Date
+                    </label>
+                    <input type="datetime-local"
+                           name="startDate"
+                           id="editStartDate"
+                           class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Expiry Date
+                    </label>
+                    <input type="datetime-local"
+                           name="expiryDate"
+                           id="editExpiryDate"
+                           class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Description
+                    </label>
+                    <input type="text"
+                           name="description"
+                           id="editDescription"
+                           class="form-control" />
+                </div>
+                <div class="col-12"
+                     style="display:flex;
+                    gap:10px;">
+                    <button type="submit"
+                            class="btn-admin">
+                        Save Changes
+                    </button>
+                    <button type="button"
+                            class="btn-admin"
+                            style="background:#f4f6fb;
+                        color:var(--text);"
+                            onclick="closeEditForm()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Coupon list table -->
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            All Coupons
+            (@couponList.Count)
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Discount</th>
+                <th>Min Order</th>
+                <th>Used</th>
+                <th>Validity</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in couponList)
+            {
+                bool isExpired =
+                    c.ExpiryDate < DateTime.Now;
+                bool isNotStarted =
+                    c.StartDate > DateTime.Now;
+
+                string statusLabel =
+                    !c.IsActive ? "Disabled" :
+                    isExpired ? "Expired" :
+                    isNotStarted ? "Scheduled" :
+                    "Active";
+
+                string statusCss =
+                    statusLabel == "Active"
+                        ? "s-confirmed"
+                    : statusLabel == "Expired" ||
+                      statusLabel == "Disabled"
+                        ? "s-cancelled"
+                    : "s-pending";
+
+                <tr>
+                    <td>
+                        <span style="font-family:
+                            monospace;
+                            font-weight:700;
+                            font-size:0.9rem;
+                            color:var(--primary);
+                            background:#fff0f0;
+                            padding:3px 8px;
+                            border-radius:6px;
+                            letter-spacing:1px;">
+                            @c.Code
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-weight:600;">
+                            @c.Title
+                        </div>
+                        <div style="font-size:0.75rem;
+                            color:var(--muted);">
+                            @c.Description
+                        </div>
+                    </td>
+                    <td style="font-weight:700;
+                        color:var(--primary);">
+                        @(c.DiscountType == "Percent"
+                            ? c.DiscountValue
+                                .ToString("0") + "%"
+                            : "৳" + c.DiscountValue
+                                .ToString("N0"))
+                        @if (c.DiscountType ==
+                             "Percent" &&
+                             c.MaxDiscount > 0)
+                        {
+                            <div style="font-size:0.72rem;
+                                color:var(--muted);">
+                                max ৳@c.MaxDiscount
+                                .ToString("N0")
+                            </div>
+                        }
+                    </td>
+                    <td style="font-size:0.85rem;">
+                        @if (c.MinOrderAmount > 0)
+                        {
+                            <span>
+                                ৳@c.MinOrderAmount
+                                .ToString("N0")
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="color:
+                                var(--muted);">
+                                No minimum
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        <div style="font-weight:700;">
+                            @c.UsedCount /
+                            @c.UsageLimit
+                        </div>
+                        <div style="background:
+                            var(--border);
+                            border-radius:4px;
+                            height:5px;
+                            margin-top:4px;
+                            overflow:hidden;
+                            width:70px;">
+                            <div style="background:
+                                var(--primary);
+                                height:100%;
+                                width:@(c.UsageLimit > 0
+                                                                             ? Math.Min(100,
+                                                                                 c.UsedCount * 100 /
+                                                                                 c.UsageLimit)
+                                                                             : 0)%;">
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size:0.78rem;
+                        color:var(--muted);">
+                        @c.StartDate
+                        .ToString("dd MMM yy")
+                        <br />→
+                        @c.ExpiryDate
+                        .ToString("dd MMM yy")
+                    </td>
+                    <td>
+                        <span class="status-badge
+                            @statusCss">
+                            @statusLabel
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex;
+                            gap:5px;
+                            flex-wrap:wrap;">
+
+                            <!-- Edit button -->
+                            <button class="btn-success-sm"
+                                    onclick="openEditForm(
+                                @c.CouponId,
+                                this)"
+                                    data-id="@c.CouponId"
+                                    data-title="@c.Title"
+                                    data-desc="@(c.Description ?? "")"
+                                    data-val="@c.DiscountValue"
+                                    data-min="@c.MinOrderAmount"
+                                    data-max="@c.MaxDiscount"
+                                    data-limit="@c.UsageLimit"
+                                    data-start="@c.StartDate.ToString("yyyy-MM-ddTHH:mm")"
+                                    data-expiry="@c.ExpiryDate.ToString("yyyy-MM-ddTHH:mm")">
+                                Edit
+                            </button>
+
+                            <!-- Toggle active -->
+                            <form asp-controller="Admin"
+                                  asp-action="ToggleCoupon"
+                                  method="post"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="couponId"
+                                       value="@c.CouponId" />
+                                <button type="submit"
+                                        class="@(c.IsActive
+                                                                                    ? "btn-danger-sm"
+                                                                                    : "btn-success-sm")">
+                                    @(c.IsActive
+                                        ? "Disable"
+                                        : "Enable")
+                                </button>
+                            </form>
+
+                            <!-- Delete -->
+                            <form asp-controller="Admin"
+                                  asp-action="DeleteCoupon"
+                                  method="post"
+                                  style="margin:0;"
+                                  onsubmit="return confirm(
+                                'Delete coupon ' + '@c.Code' + '?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="couponId"
+                                       value="@c.CouponId" />
+                                <button type="submit"
+                                        class="btn-danger-sm">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+            @if (!couponList.Any())
+            {
+                <tr>
+                    <td colspan="8"
+                        style="text-align:center;
+                        padding:40px;
+                        color:var(--muted);">
+                        No coupons yet.
+                        Click + New Coupon to create one.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleCreateForm() {
+            var f = document.getElementById(
+                'createForm');
+            f.style.display =
+                f.style.display === 'none' ||
+                f.style.display === ''
+                    ? 'block' : 'none';
+        }
+
+        function toggleDiscountType() {
+            var t = document.getElementById(
+                'discountTypeSelect').value;
+            var lbl = document.getElementById(
+                'discountValueLabel');
+            var maxWrap = document.getElementById(
+                'maxDiscountWrap');
+            if (t === 'Percent') {
+                lbl.textContent =
+                    'Discount Percentage (%) *';
+                maxWrap.style.display = 'block';
+            } else {
+                lbl.textContent =
+                    'Discount Amount (৳) *';
+                maxWrap.style.display = 'none';
+            }
+        }
+
+        function openEditForm(id, btn) {
+            document.getElementById(
+                'editCouponId').value =
+                btn.getAttribute('data-id');
+            document.getElementById(
+                'editTitle').value =
+                btn.getAttribute('data-title');
+            document.getElementById(
+                'editDescription').value =
+                btn.getAttribute('data-desc');
+            document.getElementById(
+                'editDiscountValue').value =
+                btn.getAttribute('data-val');
+            document.getElementById(
+                'editMinOrder').value =
+                btn.getAttribute('data-min');
+            document.getElementById(
+                'editMaxDiscount').value =
+                btn.getAttribute('data-max');
+            document.getElementById(
+                'editUsageLimit').value =
+                btn.getAttribute('data-limit');
+            document.getElementById(
+                'editStartDate').value =
+                btn.getAttribute('data-start');
+            document.getElementById(
+                'editExpiryDate').value =
+                btn.getAttribute('data-expiry');
+
+            var wrap = document.getElementById(
+                'editFormWrap');
+            wrap.style.display = 'flex';
+        }
+
+        function closeEditForm() {
+            document.getElementById(
+                'editFormWrap').style.display = 'none';
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('editFormWrap')
+            .addEventListener('click', function(e) {
+                if (e.target === this)
+                    closeEditForm();
+            });
+    </script>
+}

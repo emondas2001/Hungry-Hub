@@ -1,0 +1,569 @@
+﻿@{
+    ViewData["Title"] = "Restaurant Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var restaurantList =
+        ViewBag.RestaurantList
+        as List<HungryHub.Models.RestaurantDb>
+        ?? new List<HungryHub.Models.RestaurantDb>();
+}
+
+<style>
+    .img-upload-wrap {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fafbff;
+        position: relative;
+    }
+
+        .img-upload-wrap:hover {
+            border-color: var(--primary);
+            background: #fff5f5;
+        }
+
+        .img-upload-wrap input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+    .img-upload-label {
+        font-size: 0.82rem;
+        color: var(--muted);
+        pointer-events: none;
+    }
+
+    .img-preview {
+        width: 100%;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: none;
+        margin-bottom: 6px;
+    }
+
+    .rest-logo {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .rest-logo-placeholder {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        background: linear-gradient( 135deg, #f4f6fb, #e8ecf8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        border: 1px solid var(--border);
+    }
+</style>
+
+<div class="page-heading">
+    Restaurant Management
+</div>
+<div class="page-sub">
+    Create, edit and manage all restaurants.
+    Changes appear on the user dashboard instantly.
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px; border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:12px; border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Add New Restaurant -->
+<div class="admin-table-card mb-4">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            Add New Restaurant
+        </div>
+        <button class="btn-admin"
+                onclick="toggleForm()">
+            + New Restaurant
+        </button>
+    </div>
+
+    <div id="addForm"
+         style="display:none; padding:20px;">
+
+        <form asp-controller="Admin"
+              asp-action="CreateRestaurant"
+              method="post"
+              enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Restaurant Name *
+                    </label>
+                    <input type="text"
+                           name="Name"
+                           class="form-control"
+                           placeholder="e.g. Dragon House"
+                           required />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Cuisine *
+                    </label>
+                    <input type="text"
+                           name="Cuisine"
+                           class="form-control"
+                           placeholder="e.g. Chinese"
+                           required />
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Address *
+                    </label>
+                    <input type="text"
+                           name="Address"
+                           class="form-control"
+                           placeholder="Area, Chattogram"
+                           required />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Phone
+                    </label>
+                    <input type="text"
+                           name="Phone"
+                           class="form-control"
+                           placeholder="+880..." />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Restaurant Logo / Photo
+                    </label>
+                    <div class="img-upload-wrap">
+                        <input type="file"
+                               name="restaurantImage"
+                               accept="image/*"
+                               onchange="previewImage(
+                        this,
+                        'restPreview',
+                        'restUploadLabel')" />
+                        <img id="restPreview"
+                             class="img-preview"
+                             src=""
+                             alt="Preview" />
+                        <div id="restUploadLabel"
+                             class="img-upload-label">
+                            <div style="font-size:1.5rem;">
+                                📷
+                            </div>
+                            <div style="margin-top:4px;">
+                                Click to upload logo
+                            </div>
+                            <div style="font-size:0.72rem;
+                                margin-top:2px;
+                                color:#bbb;">
+                                JPG, PNG, WEBP
+                                (auto-resized 400x400)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Delivery Fee (BDT)
+                    </label>
+                    <input type="number"
+                           name="DeliveryFee"
+                           class="form-control"
+                           value="20"
+                           min="0" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Delivery Time (min)
+                    </label>
+                    <input type="number"
+                           name="DeliveryTime"
+                           class="form-control"
+                           value="30"
+                           min="1" />
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Min Order
+                    </label>
+                    <input type="number"
+                           name="MinOrder"
+                           class="form-control"
+                           value="0"
+                           min="0" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Tag
+                    </label>
+                    <select name="Tag"
+                            class="form-select">
+                        <option value="">None</option>
+                        <option value="Popular">
+                            Popular
+                        </option>
+                        <option value="New">
+                            New
+                        </option>
+                        <option value="Trending">
+                            Trending
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label"
+                           style="font-size:0.83rem;
+                        font-weight:600;">
+                        Description
+                    </label>
+                    <input type="text"
+                           name="Description"
+                           class="form-control"
+                           placeholder="Short description" />
+                </div>
+
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn-admin">
+                        Create Restaurant
+                    </button>
+                    <button type="button"
+                            class="btn-admin"
+                            style="background:#f4f6fb;
+                        color:var(--text);
+                        margin-left:8px;"
+                            onclick="toggleForm()">
+                        Cancel
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Search -->
+<div style="margin-bottom:16px;">
+    <form method="get"
+          asp-action="Restaurants"
+          style="display:flex; gap:10px;">
+        <input type="text"
+               name="search"
+               value="@ViewBag.Search"
+               class="form-control"
+               placeholder="Search restaurants..."
+               style="max-width:320px;" />
+        <button type="submit" class="btn-admin">
+            Search
+        </button>
+        @if (ViewBag.Search != null)
+        {
+            <a href="/Admin/Restaurants"
+                   class="btn-admin"
+                   style="background:#f4f6fb;
+                color:var(--text);">
+                Clear
+            </a>
+        }
+    </form>
+</div>
+
+<!-- Restaurants Table -->
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            All Restaurants (@restaurantList.Count)
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Logo</th>
+                <th>Name</th>
+                <th>Cuisine</th>
+                <th>Address</th>
+                <th>Delivery</th>
+                <th>Rating</th>
+                <th>Status</th>
+                <th>Tag</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in restaurantList)
+            {
+                <tr>
+                    <td>
+                        @if (!string.IsNullOrEmpty(
+                            r.ImagePath))
+                        {
+                            <img src="@r.ImagePath"
+                                 class="rest-logo"
+                                 alt="@r.Name" />
+                        }
+                        else
+                        {
+                            <div class="rest-logo-placeholder">
+                                🍽️
+                            </div>
+                        }
+                    </td>
+                    <td>
+                        <div style="font-weight:700;">
+                            @r.Name
+                        </div>
+                        <div style="font-size:0.75rem;
+                            color:var(--muted);">
+                            @r.Phone
+                        </div>
+                    </td>
+                    <td>@r.Cuisine</td>
+                    <td style="font-size:0.82rem;
+                        color:var(--muted);
+                        max-width:150px;">
+                        @r.Address
+                    </td>
+                    <td style="font-size:0.82rem;">
+                        &#2547;@r.DeliveryFee
+                        <br />
+                        <span style="color:var(--muted);
+                            font-size:0.75rem;">
+                            @r.DeliveryTime min
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color:#f59f00;
+                            font-weight:700;">
+                            &#11088; @r.Rating
+                        </span>
+                    </td>
+                    <td>
+                        @if (r.IsActive && r.IsOpen)
+                        {
+                            <span class="status-badge
+                                s-confirmed">
+                                Open
+                            </span>
+                        }
+                        else if (r.IsActive &&
+                                 !r.IsOpen)
+                        {
+                            <span class="status-badge
+                                s-pending">
+                                Closed
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge
+                                s-cancelled">
+                                Inactive
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(
+                            r.Tag))
+                        {
+                            <span style="background:#f0f4ff;
+                                border-radius:6px;
+                                padding:2px 8px;
+                                font-size:0.75rem;
+                                font-weight:600;">
+                                @r.Tag
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        <div style="display:flex;
+                            gap:5px;
+                            flex-wrap:wrap;">
+
+                            <a href="/Admin/EditRestaurant/@r.RestaurantId"
+                                   class="btn-success-sm">
+                                Edit
+                            </a>
+
+                            <a href="/Admin/RestaurantHours/@r.RestaurantId"
+                                   class="btn-admin"
+                                   style="padding:5px 10px;
+                                font-size:0.78rem;">
+                                Hours
+                            </a>
+
+                            <a href="/Admin/RestaurantMenu/@r.RestaurantId"
+                                   class="btn-admin"
+                                   style="padding:5px 10px;
+                                font-size:0.78rem;
+                                background:#339af0;">
+                                Menu
+                            </a>
+
+                            <form asp-action="ToggleRestaurant"
+                                  method="post"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="restaurantId"
+                                       value="@r.RestaurantId" />
+                                <input type="hidden"
+                                       name="toggleType"
+                                       value="open" />
+                                <button type="submit"
+                                        class="@(r.IsOpen
+                                                                                                                        ? "btn-danger-sm"
+                                                                                                                        : "btn-success-sm")">
+                                    @(r.IsOpen
+                                        ? "Close"
+                                        : "Open")
+                                </button>
+                            </form>
+
+                            <form asp-action="ToggleRestaurant"
+                                  method="post"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="restaurantId"
+                                       value="@r.RestaurantId" />
+                                <input type="hidden"
+                                       name="toggleType"
+                                       value="active" />
+                                <button type="submit"
+                                        class="@(r.IsActive
+                                                                                                                        ? "btn-danger-sm"
+                                                                                                                        : "btn-success-sm")">
+                                    @(r.IsActive
+                                        ? "Deactivate"
+                                        : "Activate")
+                                </button>
+                            </form>
+
+                            <form asp-action="DeleteRestaurant"
+                                  method="post"
+                                  style="margin:0;"
+                                  onsubmit="return confirm(
+                                'Delete this restaurant?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="restaurantId"
+                                       value="@r.RestaurantId" />
+                                <button type="submit"
+                                        class="btn-danger-sm">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+
+            @if (!restaurantList.Any())
+            {
+                <tr>
+                    <td colspan="9"
+                        style="text-align:center;
+                        padding:40px;
+                        color:var(--muted);">
+                        No restaurants found.
+                        Click + New Restaurant to add one.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleForm() {
+            var f = document.getElementById('addForm');
+            f.style.display =
+                f.style.display === 'none' ||
+                f.style.display === ''
+                    ? 'block' : 'none';
+        }
+
+        function previewImage(
+            input, previewId, labelId) {
+            var preview =
+                document.getElementById(previewId);
+            var label =
+                document.getElementById(labelId);
+
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (label)
+                        label.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

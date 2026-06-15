@@ -1,0 +1,602 @@
+﻿@{
+    ViewData["Title"] = "Menu Management";
+    Layout =
+        "~/Views/Shared/_OwnerLayout.cshtml";
+
+    var menuItems =
+        ViewBag.MenuItems
+        as List<HungryHub.Models.MenuItem>
+        ?? new List<HungryHub.Models.MenuItem>();
+
+    var categories =
+        ViewBag.Categories
+        as List<string>
+        ?? new List<string>();
+}
+
+<style>
+    .menu-img-preview {
+        width: 100%;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: none;
+        margin-bottom: 4px;
+    }
+</style>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:10px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:10px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<div class="page-heading">Menu Management</div>
+<div class="page-sub">
+    Add, update, and manage your menu.
+    Changes appear on the customer app instantly.
+</div>
+
+<!-- Add item form -->
+<div class="owner-card">
+    <h5>➕ Add New Menu Item</h5>
+    <form asp-controller="RestaurantOwner"
+          asp-action="AddMenuItem"
+          method="post"
+          enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">
+                    Item Name *
+                </label>
+                <input type="text"
+                       name="name"
+                       id="newItemName"
+                       class="form-control"
+                       placeholder="e.g. Mutton Kacchi"
+                       required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">
+                    Category *
+                </label>
+                <input type="text"
+                       name="category"
+                       id="newCategory"
+                       class="form-control"
+                       placeholder="e.g. Main Course"
+                       list="catSuggestions"
+                       required />
+                <datalist id="catSuggestions">
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat" />
+                    }
+                </datalist>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">
+                    Price (৳) *
+                </label>
+                <input type="number"
+                       name="price"
+                       id="newPrice"
+                       class="form-control"
+                       placeholder="320"
+                       min="0"
+                       step="0.01"
+                       required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">
+                    Food Photo
+                </label>
+                <div class="img-upload-wrap">
+                    <input type="file"
+                           name="foodImage"
+                           accept="image/*"
+                           onchange="previewMenuImg(
+                    this,
+                    'newFoodPreview',
+                    'newFoodLabel')" />
+                    <img id="newFoodPreview"
+                         class="menu-img-preview"
+                         src="" alt="Preview" />
+                    <div id="newFoodLabel"
+                         class="img-upload-label">
+                        <div style="font-size:1.2rem;">
+                            🍽️
+                        </div>
+                        <div style="margin-top:2px;
+                            font-size:0.75rem;">
+                            Upload food photo
+                        </div>
+                        <div style="font-size:0.68rem;
+                            color:#bbb;">
+                            Auto-resized 600×400
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">
+                    Description
+                </label>
+                <input type="text"
+                       name="description"
+                       id="newDesc"
+                       class="form-control"
+                       placeholder="Brief description" />
+            </div>
+            <input type="hidden"
+                   name="icon"
+                   value="🍽️" />
+            <div class="col-12">
+                <button type="submit"
+                        class="btn-primary-o">
+                    Add Item
+                </button>
+                <button type="button"
+                        class="btn-secondary-o"
+                        style="margin-left:8px;"
+                        onclick="clearAddForm()">
+                    Clear
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Search -->
+<form method="get"
+      asp-action="Menu"
+      style="display:flex;
+    gap:10px;
+    margin-bottom:14px;">
+    <input type="text"
+           name="search"
+           value="@ViewBag.Search"
+           class="form-control"
+           placeholder="Search items..."
+           style="max-width:280px;" />
+    <button type="submit"
+            class="btn-primary-o">
+        Search
+    </button>
+    @if (!string.IsNullOrEmpty(
+        ViewBag.Search as string))
+    {
+        <a asp-action="Menu"
+           class="btn-secondary-o">
+            Clear
+        </a>
+    }
+</form>
+
+<!-- Category filter tabs -->
+@if (categories.Any())
+{
+    <div style="display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        margin-bottom:14px;">
+        <a href="/RestaurantOwner/Menu"
+           style="padding:5px 14px;
+            border-radius:20px;
+            font-size:0.8rem;
+            font-weight:600;
+            text-decoration:none;
+            background:var(--primary);
+            color:#fff;">
+            All
+        </a>
+        @foreach (var cat in categories)
+        {
+            <a href="/RestaurantOwner/Menu?search=@Uri.EscapeDataString(cat)"
+               style="padding:5px 14px;
+                border-radius:20px;
+                font-size:0.8rem;
+                font-weight:600;
+                text-decoration:none;
+                background:#f4f6fb;
+                color:var(--text);
+                border:1.5px solid
+                var(--border);">
+                @cat
+            </a>
+        }
+    </div>
+}
+
+<!-- Menu items table -->
+<div class="owner-card">
+    <h5>
+        🧾 Menu Items
+        (@menuItems.Count items)
+    </h5>
+    @if (!menuItems.Any())
+    {
+        <div style="text-align:center;
+            padding:40px;
+            color:var(--muted);">
+            No menu items yet.
+            Add your first item above!
+        </div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in menuItems)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(
+                                item.ImagePath))
+                            {
+                                <img src="@item.ImagePath"
+                                     class="food-thumb"
+                                     alt="@item.Name" />
+                            }
+                            else
+                            {
+                                <div class="food-thumb-placeholder">
+                                    @item.Icon
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <div style="font-weight:600;">
+                                @item.Name
+                            </div>
+                            <div style="font-size:0.75rem;
+                                color:var(--muted);">
+                                @item.Description
+                            </div>
+                        </td>
+                        <td>
+                            <span style="background:#f0f4ff;
+                                border-radius:6px;
+                                padding:3px 9px;
+                                font-size:0.78rem;
+                                font-weight:600;">
+                                @item.Category
+                            </span>
+                        </td>
+                        <td style="font-weight:700;
+                            color:var(--primary);">
+                            ৳@item.Price.ToString("0")
+                        </td>
+                        <td>
+                            @if (item.IsAvailable)
+                            {
+                                <span class="status-badge
+                                    s-confirmed">
+                                    Available
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge
+                                    s-cancelled">
+                                    Unavailable
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div style="display:flex;
+                                gap:6px;
+                                flex-wrap:wrap;">
+
+                                <!-- Edit button -->
+                                <button type="button"
+                                        class="btn-success-o"
+                                        onclick="openEditModal(this)"
+                                        data-id="@item.MenuItemId"
+                                        data-name="@item.Name"
+                                        data-cat="@item.Category"
+                                        data-price="@item.Price"
+                                        data-desc="@item.Description"
+                                        data-icon="@item.Icon"
+                                        data-img="@item.ImagePath">
+                                    Edit
+                                </button>
+
+                                <!-- Toggle -->
+                                <form asp-controller="RestaurantOwner"
+                                      asp-action="ToggleMenuItem"
+                                      method="post"
+                                      style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="menuItemId"
+                                           value="@item.MenuItemId" />
+                                    <button type="submit"
+                                            class="@(item.IsAvailable
+                                                                                            ? "btn-danger-o"
+                                                                                            : "btn-success-o")">
+                                        @(item.IsAvailable
+                                            ? "Disable"
+                                            : "Enable")
+                                    </button>
+                                </form>
+
+                                <!-- Delete -->
+                                <form asp-controller="RestaurantOwner"
+                                      asp-action="DeleteMenuItem"
+                                      method="post"
+                                      style="margin:0;"
+                                      onsubmit="return confirm(
+                                    'Delete this item?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden"
+                                           name="menuItemId"
+                                           value="@item.MenuItemId" />
+                                    <button type="submit"
+                                            class="btn-danger-o">
+                                        Delete
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- Edit item modal -->
+<div id="editModal"
+     style="display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;">
+    <div style="background:#fff;
+        border-radius:18px;
+        padding:26px;
+        max-width:580px;
+        width:92%;
+        max-height:90vh;
+        overflow-y:auto;">
+        <div style="font-size:0.98rem;
+            font-weight:700;
+            margin-bottom:18px;
+            color:var(--text);">
+            ✏️ Edit Menu Item
+        </div>
+        <form asp-controller="RestaurantOwner"
+              asp-action="UpdateMenuItem"
+              method="post"
+              enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   name="menuItemId"
+                   id="editMenuItemId" />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Item Name *
+                    </label>
+                    <input type="text"
+                           name="name"
+                           id="editName"
+                           class="form-control"
+                           required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        Category *
+                    </label>
+                    <input type="text"
+                           name="category"
+                           id="editCat"
+                           class="form-control"
+                           list="catSuggestions"
+                           required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        Price (৳) *
+                    </label>
+                    <input type="number"
+                           name="price"
+                           id="editPrice"
+                           class="form-control"
+                           min="0"
+                           step="0.01"
+                           required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Description
+                    </label>
+                    <input type="text"
+                           name="description"
+                           id="editDescription"
+                           class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Update Photo
+                        (optional)
+                    </label>
+                    <div class="img-upload-wrap">
+                        <input type="file"
+                               name="foodImage"
+                               accept="image/*"
+                               onchange="previewMenuImg(
+                        this,
+                        'editImgPreview',
+                        'editImgLabel')" />
+                        <img id="editImgPreview"
+                             class="menu-img-preview"
+                             src="" alt="" />
+                        <div id="editImgLabel"
+                             class="img-upload-label"
+                             id="editImgLbl">
+                            <div id="editCurrentImg"
+                                 style="font-size:1.2rem;">
+                                📷
+                            </div>
+                            <div style="font-size:0.75rem;
+                                margin-top:2px;">
+                                Click to change photo
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12"
+                     style="display:flex;
+                    gap:10px;">
+                    <button type="submit"
+                            class="btn-primary-o">
+                        Save Changes
+                    </button>
+                    <button type="button"
+                            class="btn-secondary-o"
+                            onclick="closeEditModal()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewMenuImg(
+            input, previewId, labelId) {
+            var preview =
+                document.getElementById(previewId);
+            var label =
+                document.getElementById(labelId);
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (label)
+                        label.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearAddForm() {
+            document.getElementById(
+                'newItemName').value = '';
+            document.getElementById(
+                'newCategory').value = '';
+            document.getElementById(
+                'newPrice').value    = '';
+            document.getElementById(
+                'newDesc').value     = '';
+            var p = document.getElementById(
+                'newFoodPreview');
+            var l = document.getElementById(
+                'newFoodLabel');
+            if (p) {
+                p.style.display = 'none';
+                p.src = '';
+            }
+            if (l) l.style.display = 'block';
+        }
+
+        function openEditModal(btn) {
+            document.getElementById(
+                'editMenuItemId').value =
+                btn.getAttribute('data-id');
+            document.getElementById(
+                'editName').value =
+                btn.getAttribute('data-name');
+            document.getElementById(
+                'editCat').value =
+                btn.getAttribute('data-cat');
+            document.getElementById(
+                'editPrice').value =
+                btn.getAttribute('data-price');
+            document.getElementById(
+                'editDescription').value =
+                btn.getAttribute('data-desc');
+
+            var imgPath =
+                btn.getAttribute('data-img');
+            var currentImg =
+                document.getElementById(
+                    'editCurrentImg');
+            if (currentImg) {
+                if (imgPath && imgPath.length > 0) {
+                    currentImg.innerHTML =
+                        '<img src="' + imgPath +
+                        '" style="width:100%;' +
+                        'height:50px;' +
+                        'object-fit:cover;' +
+                        'border-radius:6px;"/>';
+                } else {
+                    currentImg.textContent =
+                        btn.getAttribute('data-icon')
+                        || '📷';
+                }
+            }
+
+            var modal =
+                document.getElementById('editModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById(
+                'editModal').style.display = 'none';
+            var p = document.getElementById(
+                'editImgPreview');
+            if (p) {
+                p.style.display = 'none';
+                p.src = '';
+            }
+        }
+
+        document.getElementById('editModal')
+            .addEventListener('click', function(e) {
+                if (e.target === this)
+                    closeEditModal();
+            });
+    </script>
+}

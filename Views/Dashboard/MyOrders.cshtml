@@ -1,0 +1,613 @@
+﻿@model List<HungryHub.Models.Order>
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+
+    var ratedIds = ViewBag.RatedOrderIds
+                   as List<int>
+                   ?? new List<int>();
+}
+
+<style>
+    .page-title    { font-size:1.4rem; font-weight:700; color:var(--text); }
+    .page-subtitle { color:var(--muted); font-size:0.9rem; margin-top:2px; }
+
+    .orders-toolbar {
+        display:flex; align-items:center;
+        justify-content:space-between;
+        margin-bottom:20px; gap:12px; flex-wrap:wrap;
+    }
+
+    .filter-tabs { display:flex; gap:8px; }
+
+    .filter-tab {
+        padding:7px 16px; border-radius:20px;
+        border:1.5px solid var(--border);
+        background:#fff; font-size:0.83rem;
+        font-weight:600; cursor:pointer;
+        transition:all 0.2s; color:var(--text);
+    }
+    .filter-tab:hover,
+    .filter-tab.active {
+        background:var(--primary);
+        border-color:var(--primary); color:#fff;
+    }
+
+    .btn-excel {
+        display:flex; align-items:center; gap:8px;
+        background:#1d7044; color:#fff;
+        border:none; border-radius:10px;
+        padding:9px 18px; font-size:0.85rem;
+        font-weight:600; text-decoration:none;
+        transition:background 0.2s;
+    }
+    .btn-excel:hover { background:#155534; color:#fff; }
+
+    .order-card {
+        background:#fff; border-radius:18px;
+        box-shadow:var(--shadow); margin-bottom:16px;
+        overflow:hidden; transition:transform 0.2s;
+    }
+    .order-card:hover { transform:translateY(-2px); }
+
+    .order-card-header {
+        display:flex; align-items:center;
+        justify-content:space-between;
+        padding:16px 20px;
+        border-bottom:1px solid var(--border);
+        flex-wrap:wrap; gap:10px;
+    }
+
+    .order-id   { font-weight:700; font-size:0.95rem; color:var(--text); }
+    .order-date { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+
+    .status-badge {
+        padding:4px 14px; border-radius:20px;
+        font-size:0.78rem; font-weight:700;
+        text-transform:uppercase; letter-spacing:0.5px;
+    }
+    .status-confirmed { background:#e8f9ee; color:#1d7044; }
+    .status-pending   { background:#fff8e1; color:#e65100; }
+    .status-delivered { background:#e3f2fd; color:#1565c0; }
+    .status-cancelled { background:#fdecea; color:#c62828; }
+
+    .order-card-body {
+        padding:16px 20px;
+        display:flex; align-items:flex-start;
+        justify-content:space-between;
+        flex-wrap:wrap; gap:16px;
+    }
+
+    .order-restaurant {
+        font-weight:700; font-size:1rem;
+        color:var(--text); margin-bottom:8px;
+    }
+
+    .order-items-list { font-size:0.83rem; color:var(--muted); }
+    .order-items-list span {
+        display:inline-block; background:#f4f6fb;
+        border-radius:6px; padding:3px 10px;
+        margin:2px 3px 2px 0; color:var(--text);
+        font-size:0.78rem;
+    }
+
+    .order-address {
+        font-size:0.8rem; color:var(--muted); margin-top:8px;
+    }
+
+    .order-amounts { text-align:right; }
+    .amount-label { font-size:0.78rem; color:var(--muted); margin-bottom:2px; }
+    .amount-value { font-size:1.2rem; font-weight:700; color:var(--primary); }
+
+    .order-card-footer {
+        padding:12px 20px;
+        border-top:1px solid var(--border);
+        display:flex; align-items:center;
+        justify-content:space-between;
+        flex-wrap:wrap; gap:8px;
+    }
+
+    .btn-view-details {
+        background:#f4f6fb;
+        border:1.5px solid var(--border);
+        border-radius:8px; padding:7px 16px;
+        font-size:0.83rem; font-weight:600;
+        cursor:pointer; transition:all 0.2s;
+        text-decoration:none; color:var(--text);
+    }
+    .btn-view-details:hover {
+        border-color:var(--primary);
+        color:var(--primary);
+    }
+
+    .btn-cancel-order {
+        background:#fdecea;
+        border:1.5px solid #f5c6c6;
+        border-radius:8px; padding:7px 16px;
+        font-size:0.83rem; font-weight:600;
+        cursor:pointer; color:#c62828;
+        transition:all 0.2s;
+        font-family:'Poppins',sans-serif;
+    }
+    .btn-cancel-order:hover {
+        background:#c62828; color:#fff;
+        border-color:#c62828;
+    }
+
+    .btn-rate {
+        background:#fff8e1;
+        border:1.5px solid #ffd54f;
+        border-radius:8px; padding:7px 16px;
+        font-size:0.83rem; font-weight:600;
+        cursor:pointer; color:#e65100;
+        transition:all 0.2s;
+        font-family:'Poppins',sans-serif;
+    }
+    .btn-rate:hover {
+        background:#e65100; color:#fff;
+        border-color:#e65100;
+    }
+
+    .empty-orders {
+        text-align:center; padding:80px 20px;
+        background:#fff; border-radius:18px;
+        box-shadow:var(--shadow);
+    }
+    .empty-orders .big { font-size:4rem; }
+
+    .tracking-mini {
+        display:flex; gap:0; align-items:center;
+    }
+    .tm-step {
+        display:flex; flex-direction:column;
+        align-items:center; gap:3px;
+    }
+    .tm-dot {
+        width:28px; height:28px; border-radius:50%;
+        background:var(--border);
+        display:flex; align-items:center;
+        justify-content:center;
+        font-size:0.75rem;
+        border:2px solid var(--border);
+    }
+    .tm-dot.done   { background:#e8f9ee; border-color:#51cf66; }
+    .tm-dot.active { background:#fff5f5; border-color:var(--primary); }
+    .tm-line {
+        width:30px; height:2px;
+        background:var(--border); margin-top:-16px;
+    }
+    .tm-line.done { background:#51cf66; }
+    .tm-label { font-size:0.65rem; color:var(--muted); white-space:nowrap; }
+
+    /* Rating modal stars */
+    .star-btn { transition:transform 0.15s; }
+    .star-btn:hover { transform:scale(1.2); }
+</style>
+
+<!-- Page Header -->
+<div class="d-flex align-items-center
+            justify-content-between mb-4">
+    <div>
+        <div class="page-title">My Orders</div>
+        <div class="page-subtitle">
+            Track and manage all your orders
+        </div>
+    </div>
+</div>
+
+<!-- Alerts -->
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+                alert-dismissible fade show"
+         style="border-radius:12px; border:none;
+                margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+                alert-dismissible fade show"
+         style="border-radius:12px; border:none;
+                margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Toolbar -->
+<div class="orders-toolbar">
+    <div class="filter-tabs">
+        <button class="filter-tab active"
+                onclick="filterOrders('all',this)">
+            All
+        </button>
+        <button class="filter-tab"
+                onclick="filterOrders('Confirmed',this)">
+            Confirmed
+        </button>
+        <button class="filter-tab"
+                onclick="filterOrders('Delivered',this)">
+            Delivered
+        </button>
+        <button class="filter-tab"
+                onclick="filterOrders('Cancelled',this)">
+            Cancelled
+        </button>
+    </div>
+    <a href="/Dashboard/DownloadExcel" class="btn-excel">
+        Export to Excel
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-orders">
+        <div class="big">📦</div>
+        <h4 style="font-weight:700; margin-top:12px;">
+            No orders yet
+        </h4>
+        <p style="color:var(--muted);">
+            Start ordering from your favourite restaurants!
+        </p>
+        <a href="/Dashboard"
+           style="background:var(--primary); color:#fff;
+                  border-radius:12px; padding:12px 28px;
+                  font-weight:700; text-decoration:none;
+                  display:inline-block; margin-top:16px;">
+            Browse Restaurants
+        </a>
+    </div>
+}
+else
+{
+    <div id="ordersList">
+        @foreach (var order in Model)
+        {
+            string statusClass = order.Status switch
+            {
+                "Confirmed" => "status-confirmed",
+                "Delivered" => "status-delivered",
+                "Cancelled" => "status-cancelled",
+                _           => "status-pending"
+            };
+
+            bool isDelivered = order.Status == "Delivered";
+            bool isCancelled = order.Status == "Cancelled";
+            bool isDone      = isDelivered || isCancelled;
+            bool alreadyRated =
+                ratedIds.Contains(order.OrderId);
+
+            <div class="order-card"
+                 data-status="@order.Status">
+
+                <!-- Header -->
+                <div class="order-card-header">
+                    <div>
+                        <div class="order-id">
+                            Order #@order.OrderId
+                        </div>
+                        <div class="order-date">
+                            @order.OrderDate.ToString(
+                                "dd MMM yyyy, hh:mm tt")
+                        </div>
+                    </div>
+                    <div style="display:flex;
+                                align-items:center;
+                                gap:12px;">
+                        <!-- Mini tracking bar -->
+                        <div class="tracking-mini">
+                            <div class="tm-step">
+                                <div class="tm-dot done">
+                                    ✓
+                                </div>
+                                <div class="tm-label">
+                                    Confirmed
+                                </div>
+                            </div>
+                            <div class="tm-line @(
+                                isDelivered ? "done" : "")">
+                            </div>
+                            <div class="tm-step">
+                                <div class="tm-dot @(
+                                    isDone ? "done" : "active")">
+                                    @(isCancelled ? "✕" : "🍳")
+                                </div>
+                                <div class="tm-label">
+                                    Preparing
+                                </div>
+                            </div>
+                            <div class="tm-line @(
+                                isDelivered ? "done" : "")">
+                            </div>
+                            <div class="tm-step">
+                                <div class="tm-dot @(
+                                    isDelivered ? "done" : "")">
+                                    🏠
+                                </div>
+                                <div class="tm-label">
+                                    Delivered
+                                </div>
+                            </div>
+                        </div>
+                        <span class="status-badge @statusClass">
+                            @order.Status
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="order-card-body">
+                    <div>
+                        <div class="order-restaurant">
+                            @order.RestaurantName
+                        </div>
+                        <div class="order-items-list">
+                            @foreach (var item in
+                                order.OrderItems)
+                            {
+                                <span>
+                                    @item.ItemName
+                                    x@item.Quantity
+                                </span>
+                            }
+                        </div>
+                        <div class="order-address">
+                            @order.DeliveryAddress
+                            @if (!string.IsNullOrEmpty(
+                                order.OrderNote))
+                            {
+                                <br/>
+                                <span>
+                                    Note: @order.OrderNote
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="order-amounts">
+                        <div class="amount-label">
+                            Grand Total
+                        </div>
+                        <div class="amount-value">
+                            &#2547;@order.GrandTotal
+                                .ToString("0")
+                        </div>
+                        <div style="font-size:0.75rem;
+                                    color:var(--muted);
+                                    margin-top:4px;">
+                            incl. &#2547;@order.DeliveryFee
+                                .ToString("0") delivery
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="order-card-footer">
+                    <a href="/Order/Confirmation/@order.OrderId"
+                       class="btn-view-details">
+                        View Details
+                    </a>
+
+                    <div style="display:flex;
+                                gap:8px; flex-wrap:wrap;
+                                align-items:center;">
+
+                        <!-- Rating button -->
+                        @if (!isDone && !alreadyRated)
+                        {
+                            <button type="button"
+                                    class="btn-rate"
+                                    onclick="openRating(
+                                        @order.OrderId,
+                                        @order.RestaurantId)">
+                                Rate Order
+                            </button>
+                        }
+                        else if (alreadyRated)
+                        {
+                            <span style="font-size:0.8rem;
+                                         color:#f59f00;
+                                         font-weight:600;">
+                                Rated
+                            </span>
+                        }
+
+                        <!-- Cancel button -->
+                        @if (!isDone)
+                        {
+                            <form asp-controller="Order"
+                                  asp-action="CancelOrder"
+                                  method="post"
+                                  onsubmit="return confirm(
+                                      'Cancel Order #@order.OrderId?');"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="orderId"
+                                       value="@order.OrderId"/>
+                                <button type="submit"
+                                        class="btn-cancel-order">
+                                    Cancel Order
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span style="font-size:0.8rem;
+                                         color:var(--muted);">
+                                @(isDelivered
+                                    ? "Order delivered"
+                                    : "Order cancelled")
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        }
+    </div>
+}
+
+<!-- Rating Modal -->
+<div class="modal fade" id="ratingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content"
+             style="border-radius:20px; border:none;">
+            <div class="modal-header"
+                 style="background:var(--primary);
+                        color:#fff;
+                        border-radius:20px 20px 0 0;
+                        border:none;">
+                <h5 class="modal-title">
+                    Rate Your Order
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"
+                 style="padding:28px;">
+                <form asp-controller="Dashboard"
+                      asp-action="SubmitRating"
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden"
+                           name="orderId"
+                           id="ratingOrderId"/>
+                    <input type="hidden"
+                           name="restaurantId"
+                           id="ratingRestaurantId"/>
+
+                    <p style="color:var(--muted);
+                               font-size:0.9rem;
+                               margin-bottom:16px;">
+                        How was your experience?
+                    </p>
+
+                    <!-- Star selector -->
+                    <div style="display:flex; gap:8px;
+                                justify-content:center;
+                                margin-bottom:20px;">
+                        @for (int star = 1; star <= 5; star++)
+                        {
+                            <span class="star-btn"
+                                  data-val="@star"
+                                  onclick="selectStar(@star)"
+                                  style="font-size:2.2rem;
+                                         cursor:pointer;
+                                         filter:grayscale(1);">
+                                ⭐
+                            </span>
+                        }
+                    </div>
+                    <input type="hidden"
+                           name="stars"
+                           id="ratingStars"
+                           value="0"/>
+
+                    <div style="margin-bottom:16px;">
+                        <label
+                            style="font-weight:600;
+                                   font-size:0.88rem;
+                                   color:var(--text);">
+                            Comment (optional)
+                        </label>
+                        <textarea name="comment"
+                                  rows="3"
+                                  class="form-control mt-2"
+                                  style="border-radius:10px;
+                                         border:1.5px solid
+                                         var(--border);
+                                         font-size:0.88rem;
+                                         font-family:'Poppins',
+                                         sans-serif;"
+                                  placeholder="Tell us about your experience...">
+                        </textarea>
+                    </div>
+
+                    <button type="submit"
+                            id="submitRatingBtn"
+                            disabled
+                            style="width:100%;
+                                   background:var(--primary);
+                                   color:#fff; border:none;
+                                   border-radius:12px;
+                                   padding:12px;
+                                   font-weight:700;
+                                   font-size:0.95rem;
+                                   cursor:pointer;
+                                   font-family:'Poppins',sans-serif;">
+                        Submit Rating
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function filterOrders(status, btn) {
+        document.querySelectorAll('.filter-tab')
+            .forEach(function(t) {
+                t.classList.remove('active');
+            });
+        btn.classList.add('active');
+
+        document.querySelectorAll('.order-card')
+            .forEach(function(card) {
+                card.style.display =
+                    (status === 'all' ||
+                     card.dataset.status === status)
+                        ? 'block' : 'none';
+            });
+    }
+
+    function openRating(orderId, restaurantId) {
+        document.getElementById(
+            'ratingOrderId').value     = orderId;
+        document.getElementById(
+            'ratingRestaurantId').value = restaurantId;
+        document.getElementById(
+            'ratingStars').value        = 0;
+
+        document.querySelectorAll('.star-btn')
+            .forEach(function(s) {
+                s.style.filter    = 'grayscale(1)';
+                s.style.transform = 'scale(1)';
+            });
+
+        document.getElementById(
+            'submitRatingBtn').disabled = true;
+
+        new bootstrap.Modal(
+            document.getElementById('ratingModal')
+        ).show();
+    }
+
+    function selectStar(val) {
+        document.getElementById(
+            'ratingStars').value = val;
+        document.getElementById(
+            'submitRatingBtn').disabled = false;
+
+        document.querySelectorAll('.star-btn')
+            .forEach(function(s) {
+                var sv = parseInt(s.dataset.val);
+                s.style.filter    =
+                    sv <= val
+                        ? 'grayscale(0)'
+                        : 'grayscale(1)';
+                s.style.transform =
+                    sv === val
+                        ? 'scale(1.25)'
+                        : 'scale(1)';
+            });
+    }
+</script>
+}

@@ -1,0 +1,187 @@
+﻿@model List<HungryHub.Models.Favourite>
+@{
+    ViewData["Title"] = "My Favourites";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<style>
+    .page-title    { font-size:1.4rem; font-weight:700; color:var(--text); }
+    .page-subtitle { color:var(--muted); font-size:0.9rem; margin-top:2px; }
+
+    .fav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .fav-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .fav-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    .fav-card-img {
+        height: 120px;
+        background: linear-gradient(135deg, #f4f6fb, #e8ecf8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        position: relative;
+    }
+
+    .fav-heart {
+        position: absolute;
+        top: 10px; right: 10px;
+        background: #fff;
+        border-radius: 50%;
+        width: 34px; height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        transition: transform 0.2s;
+    }
+    .fav-heart:hover { transform: scale(1.15); }
+
+    .fav-body { padding: 14px 16px; }
+    .fav-name {
+        font-weight: 700;
+        font-size: 0.97rem;
+        color: var(--text);
+        margin-bottom: 4px;
+    }
+    .fav-cuisine {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+    .fav-added {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+
+    .btn-order-now {
+        display: block;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 9px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        transition: background 0.2s;
+        width: 100%;
+        font-family: 'Poppins', sans-serif;
+    }
+    .btn-order-now:hover { background: var(--primary-dk); color: #fff; }
+
+    .empty-favs {
+        text-align: center;
+        padding: 80px 20px;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        margin-top: 20px;
+    }
+    .empty-favs .big { font-size: 4rem; }
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <div>
+        <div class="page-title">My Favourites</div>
+        <div class="page-subtitle">
+            @Model.Count restaurant(s) saved
+        </div>
+    </div>
+    <a href="/Dashboard"
+       style="background:var(--primary); color:#fff; border:none;
+              border-radius:10px; padding:9px 18px; font-size:0.85rem;
+              font-weight:600; text-decoration:none;">
+        Browse More
+    </a>
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success alert-dismissible fade show"
+         style="border-radius:12px; border:none; margin-bottom:12px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="empty-favs">
+        <div class="big">❤️</div>
+        <h4 style="font-weight:700; margin-top:12px;">
+            No favourites yet
+        </h4>
+        <p style="color:var(--muted);">
+            Click the heart on any restaurant to save it here.
+        </p>
+        <a href="/Dashboard"
+           style="background:var(--primary); color:#fff;
+                  border-radius:12px; padding:12px 28px;
+                  font-weight:700; text-decoration:none;
+                  display:inline-block; margin-top:16px;">
+            Browse Restaurants
+        </a>
+    </div>
+}
+else
+{
+    <div class="fav-grid">
+        @foreach (var fav in Model)
+        {
+            <div class="fav-card" id="favCard-@fav.RestaurantId">
+                <div class="fav-card-img">
+                    <span>@fav.RestaurantIcon</span>
+                    <form asp-controller="Dashboard"
+                          asp-action="ToggleFavourite"
+                          method="post" style="margin:0;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="restaurantId"
+                               value="@fav.RestaurantId"/>
+                        <input type="hidden" name="restaurantName"
+                               value="@fav.RestaurantName"/>
+                        <input type="hidden" name="restaurantCuisine"
+                               value="@fav.RestaurantCuisine"/>
+                        <input type="hidden" name="restaurantIcon"
+                               value="@fav.RestaurantIcon"/>
+                        <button type="submit" class="fav-heart"
+                                title="Remove from favourites">
+                            ❤️
+                        </button>
+                    </form>
+                </div>
+                <div class="fav-body">
+                    <div class="fav-name">@fav.RestaurantName</div>
+                    <div class="fav-cuisine">@fav.RestaurantCuisine</div>
+                    <div class="fav-added">
+                        Saved on @fav.AddedAt.ToString("dd MMM yyyy")
+                    </div>
+                    <a href="/Order/Menu/@fav.RestaurantId"
+                       class="btn-order-now">
+                        Order Now
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}

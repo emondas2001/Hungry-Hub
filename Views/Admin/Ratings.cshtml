@@ -1,0 +1,102 @@
+﻿@{
+    ViewData["Title"] = "Ratings Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var restNames =
+        ViewBag.RestaurantNames
+        as Dictionary<int, string>
+        ?? new Dictionary<int, string>();
+}
+
+<div class="page-heading">Ratings Management</div>
+<div class="page-sub">
+    View and moderate all customer ratings
+</div>
+
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">All Ratings</div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Restaurant</th>
+                <th>Order</th>
+                <th>Stars</th>
+                <th>Comment</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in
+                ViewBag.RatingList
+                as IEnumerable<dynamic>
+                ?? new List<dynamic>())
+            {
+                restNames.TryGetValue(
+                    (int)r.RestaurantId,
+                    out string? rName);
+
+                string stars = string.Concat(
+                    Enumerable.Repeat("⭐", (int)r.Stars));
+
+                <tr>
+                    <td style="font-weight:700;
+                        color:var(--muted);">
+                        @r.RatingId
+                    </td>
+                    <td style="font-size:0.82rem;
+                        color:var(--muted);">
+                        @r.UserEmail
+                    </td>
+                    <td style="font-weight:600;">
+                        @(rName ?? "Unknown")
+                    </td>
+                    <td>#@r.OrderId</td>
+                    <td>
+                        <span style="font-size:0.9rem;">
+                            @stars
+                        </span>
+                        <span style="font-weight:700;
+                            font-size:0.85rem;
+                            margin-left:4px;">
+                            @r.Stars/5
+                        </span>
+                    </td>
+                    <td style="font-size:0.83rem;
+                        color:var(--muted);
+                        max-width:200px;">
+                        @(string.IsNullOrEmpty(
+                            (string)r.Comment)
+                            ? "—"
+                            : r.Comment)
+                    </td>
+                    <td style="font-size:0.78rem;
+                        color:var(--muted);">
+                        @((DateTime)r.RatedAt)
+                        .ToString("dd MMM yyyy")
+                    </td>
+                    <td>
+                        <form asp-controller="Admin"
+                              asp-action="DeleteRating"
+                              method="post" style="margin:0;"
+                              onsubmit="return confirm(
+                            'Delete this rating?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden"
+                                   name="ratingId"
+                                   value="@r.RatingId" />
+                            <button type="submit"
+                                    class="btn-danger-sm">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

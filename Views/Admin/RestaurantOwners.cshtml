@@ -1,0 +1,365 @@
+﻿@using HungryHub.Models
+@{
+    ViewData["Title"] = "Restaurant Owners";
+    Layout =
+        "~/Views/Shared/_AdminLayout.cshtml";
+
+    IEnumerable<RestaurantOwner> owners =
+        ViewBag.OwnerList
+        as IEnumerable<RestaurantOwner>
+        ?? Enumerable.Empty<RestaurantOwner>();
+
+    var restNames =
+        ViewBag.RestaurantNames
+        as Dictionary<int, string>
+        ?? new Dictionary<int, string>();
+
+    IEnumerable<RestaurantDb> allRestaurants =
+        ViewBag.AllRestaurants
+        as IEnumerable<RestaurantDb>
+        ?? Enumerable.Empty<RestaurantDb>();
+
+    IEnumerable<dynamic> logs =
+        ViewBag.RecentLogs
+        as IEnumerable<dynamic>
+        ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="page-heading">
+    Restaurant Owner Accounts
+</div>
+<div class="page-sub">
+    Create and manage restaurant owner logins.
+    Owners can manage their own menus.
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:12px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<!-- Create owner form -->
+<div class="admin-table-card mb-4">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            ➕ Create Owner Account
+        </div>
+        <button class="btn-admin"
+                onclick="toggleForm()">
+            + New Owner
+        </button>
+    </div>
+
+    <div id="createForm"
+         style="display:none; padding:22px;">
+        <form asp-controller="Admin"
+              asp-action="CreateRestaurantOwner"
+              method="post">
+            @Html.AntiForgeryToken()
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Restaurant *
+                    </label>
+                    <select name="restaurantId"
+                            class="form-select"
+                            required>
+                        <option value="">
+                            -- Select restaurant --
+                        </option>
+                        @foreach (var r in
+                            allRestaurants)
+                        {
+                            <option value="@r.RestaurantId">
+                                @r.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Full Name *
+                    </label>
+                    <input type="text"
+                           name="fullName"
+                           class="form-control"
+                           placeholder="Owner's full name"
+                           required />
+                </div>
+
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Email *
+                    </label>
+                    <input type="email"
+                           name="email"
+                           class="form-control"
+                           placeholder="owner@restaurant.com"
+                           required />
+                </div>
+
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Password *
+                    </label>
+                    <input type="text"
+                           name="password"
+                           class="form-control"
+                           placeholder="Set a password"
+                           required />
+                </div>
+
+                <div class="col-md-4">
+                    <label style="font-size:0.83rem;
+                        font-weight:600;">
+                        Phone
+                    </label>
+                    <input type="text"
+                           name="phone"
+                           class="form-control"
+                           placeholder="+880..." />
+                </div>
+
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn-admin">
+                        Create Account
+                    </button>
+                    <button type="button"
+                            class="btn-admin"
+                            style="background:#f4f6fb;
+                        color:var(--text);
+                        margin-left:8px;"
+                            onclick="toggleForm()">
+                        Cancel
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Login portal info -->
+<div style="background:#f0f4ff;
+    border-radius:12px;
+    padding:14px 18px;
+    margin-bottom:16px;
+    font-size:0.85rem;
+    color:#1a1a2e;
+    border-left:4px solid #339af0;">
+    🔗 Restaurant owner login portal:
+    <strong>/RestaurantOwner/Login</strong>
+    — Share this URL with restaurant owners
+    along with their credentials.
+</div>
+
+<!-- Owners table -->
+<div class="admin-table-card mb-4">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            Owner Accounts (@owners.Count())
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Owner</th>
+                <th>Restaurant</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in owners)
+            {
+                string restName =
+                    restNames.ContainsKey(
+                        o.RestaurantId)
+                    ? restNames[o.RestaurantId]
+                    : "Unknown";
+
+                <tr>
+                    <td style="font-weight:600;">
+                        @o.FullName
+                    </td>
+                    <td>@restName</td>
+                    <td style="font-size:0.82rem;
+                        color:var(--muted);">
+                        @o.Email
+                    </td>
+                    <td style="font-size:0.82rem;">
+                        @(o.Phone ?? "—")
+                    </td>
+                    <td>
+                        @if (o.IsActive)
+                        {
+                            <span class="status-badge
+                                s-confirmed">
+                                Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-badge
+                                s-cancelled">
+                                Inactive
+                            </span>
+                        }
+                    </td>
+                    <td style="font-size:0.78rem;
+                        color:var(--muted);">
+                        @o.CreatedAt.ToString(
+                            "dd MMM yyyy")
+                    </td>
+                    <td>
+                        <div style="display:flex;
+                            gap:5px;">
+
+                            <form asp-controller="Admin"
+                                  asp-action="ToggleOwner"
+                                  method="post"
+                                  style="margin:0;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="ownerId"
+                                       value="@o.OwnerId" />
+                                <button type="submit"
+                                        class="@(o.IsActive
+                                                                                    ? "btn-danger-sm"
+                                                                                    : "btn-success-sm")">
+                                    @(o.IsActive
+                                        ? "Deactivate"
+                                        : "Activate")
+                                </button>
+                            </form>
+
+                            <form asp-controller="Admin"
+                                  asp-action="DeleteOwner"
+                                  method="post"
+                                  style="margin:0;"
+                                  onsubmit="return confirm(
+                                'Delete this owner account?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="ownerId"
+                                       value="@o.OwnerId" />
+                                <button type="submit"
+                                        class="btn-danger-sm">
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+            }
+            @if (!owners.Any())
+            {
+                <tr>
+                    <td colspan="7"
+                        style="text-align:center;
+                        padding:40px;
+                        color:var(--muted);">
+                        No owner accounts yet.
+                        Click + New Owner to create one.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Activity log -->
+<div class="admin-table-card">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            📋 Recent Restaurant Activity Log
+        </div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Restaurant</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in logs)
+            {
+                <tr>
+                    <td style="font-weight:600;">
+                        @log.RestaurantName
+                    </td>
+                    <td>@log.Action</td>
+                    <td style="font-size:0.82rem;
+                        color:var(--muted);">
+                        @(log.Details ?? "—")
+                    </td>
+                    <td style="font-size:0.78rem;
+                        color:var(--muted);">
+                        @((DateTime)log.CreatedAt)
+                        .ToString("dd MMM, HH:mm")
+                    </td>
+                </tr>
+            }
+            @if (!logs.Any())
+            {
+                <tr>
+                    <td colspan="4"
+                        style="text-align:center;
+                        padding:30px;
+                        color:var(--muted);">
+                        No activity logged yet.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleForm() {
+            var f = document.getElementById(
+                'createForm');
+            f.style.display =
+                f.style.display === 'none' ||
+                f.style.display === ''
+                    ? 'block' : 'none';
+        }
+    </script>
+}

@@ -1,0 +1,206 @@
+﻿@{
+    ViewData["Title"] = "Orders";
+    Layout =
+        "~/Views/Shared/_OwnerLayout.cshtml";
+
+    string filterStatus =
+        ViewBag.FilterStatus ?? "";
+
+    var orders =
+        ViewBag.OrderList
+        as IEnumerable<dynamic>
+        ?? new List<dynamic>();
+}
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:10px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<div class="page-heading">Orders</div>
+<div class="page-sub">
+    Manage and update your restaurant orders
+</div>
+
+<!-- Filter tabs -->
+<div style="display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;">
+    @foreach (var s in new[]
+    {
+        "", "Confirmed", "Delivered", "Cancelled"
+    })
+    {
+        string lbl = s == "" ? "All" : s;
+        bool active = filterStatus == s;
+        <a href="/RestaurantOwner/Orders@(s == "" ? "" : "?status=" + s)"
+           style="padding:7px 16px;
+            border-radius:20px;
+            font-size:0.83rem;
+            font-weight:600;
+            text-decoration:none;
+            border:1.5px solid
+            @(active
+               ? "var(--primary)"
+               : "var(--border)");
+            background:
+            @(active
+               ? "var(--primary)"
+               : "#fff");
+            color:@(active
+                                 ? "#fff"
+                                 : "var(--text)");">
+            @lbl
+        </a>
+    }
+</div>
+
+<div class="owner-card">
+    <h5>
+        📦 Orders
+        @(filterStatus == ""
+            ? ""
+            : "— " + filterStatus)
+        (@orders.Count())
+    </h5>
+
+    @if (!orders.Any())
+    {
+        <div style="text-align:center;
+            padding:40px;
+            color:var(--muted);">
+            No orders found.
+        </div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>#Order</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in orders)
+                {
+                    string sc =
+                        o.Status == "Confirmed"
+                            ? "s-confirmed"
+                        : o.Status == "Delivered"
+                            ? "s-delivered"
+                        : o.Status == "Cancelled"
+                            ? "s-cancelled"
+                        : "s-pending";
+
+                    <tr>
+                        <td style="font-weight:700;">
+                            #@o.OrderId
+                        </td>
+                        <td>
+                            <div style="font-size:0.82rem;">
+                                @o.UserEmail
+                            </div>
+                            <div style="font-size:0.75rem;
+                                color:var(--muted);">
+                                @o.DeliveryAddress
+                            </div>
+                        </td>
+                        <td>
+                            <span style="background:#f0f4ff;
+                                border-radius:6px;
+                                padding:2px 8px;
+                                font-size:0.78rem;">
+                                @o.ItemCount items
+                            </span>
+                        </td>
+                        <td style="font-weight:700;
+                            color:var(--primary);">
+                            ৳@string.Format(
+                                                            "{0:N0}",
+                                                            o.GrandTotal)
+                        </td>
+                        <td style="font-size:0.8rem;">
+                            @o.PaymentMethod
+                            <div style="font-size:0.72rem;
+                                color:@(o.PaymentStatus
+                                                                             == "Paid"
+                                                                             ? "#1d7044"
+                                                                             : "#888");">
+                                @o.PaymentStatus
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge @sc">
+                                @o.Status
+                            </span>
+                        </td>
+                        <td style="font-size:0.78rem;
+                            color:var(--muted);">
+                            @((DateTime)o.OrderDate)
+                            .ToString(
+                            "dd MMM, HH:mm")
+                        </td>
+                        <td>
+                            @if (o.Status ==
+                                 "Confirmed")
+                            {
+                                <div style="display:flex;
+                                    gap:5px;">
+                                    <form asp-controller="RestaurantOwner"
+                                          asp-action="UpdateOrderStatus"
+                                          method="post"
+                                          style="margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="orderId"
+                                               value="@o.OrderId" />
+                                        <input type="hidden"
+                                               name="newStatus"
+                                               value="Delivered" />
+                                        <button type="submit"
+                                                class="btn-success-o">
+                                            Delivered
+                                        </button>
+                                    </form>
+                                    <form asp-controller="RestaurantOwner"
+                                          asp-action="UpdateOrderStatus"
+                                          method="post"
+                                          style="margin:0;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="orderId"
+                                               value="@o.OrderId" />
+                                        <input type="hidden"
+                                               name="newStatus"
+                                               value="Cancelled" />
+                                        <button type="submit"
+                                                class="btn-danger-o">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

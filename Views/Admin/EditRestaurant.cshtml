@@ -1,0 +1,296 @@
+﻿@model HungryHub.Models.RestaurantDb
+@{
+    ViewData["Title"] = "Edit Restaurant";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .img-upload-wrap {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fafbff;
+        position: relative;
+    }
+
+        .img-upload-wrap:hover {
+            border-color: var(--primary);
+            background: #fff5f5;
+        }
+
+        .img-upload-wrap input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+    .img-upload-label {
+        font-size: 0.82rem;
+        color: var(--muted);
+        pointer-events: none;
+    }
+
+    .img-preview {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 6px;
+    }
+
+    .current-img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-bottom: 8px;
+    }
+</style>
+
+<div class="page-heading">
+    Edit Restaurant
+</div>
+<div class="page-sub">
+    Update restaurant details and logo
+</div>
+
+<div class="admin-table-card"
+     style="max-width:760px;">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            @Model.Name
+        </div>
+        <a href="/Admin/Restaurants"
+               class="btn-admin"
+               style="background:#f4f6fb;
+            color:var(--text);">
+            Back
+        </a>
+    </div>
+    <div style="padding:24px;">
+
+        <form asp-controller="Admin"
+              asp-action="EditRestaurant"
+              method="post"
+              enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   asp-for="RestaurantId" />
+
+            <div class="row g-3">
+
+                <!-- Name -->
+                <div class="col-md-6">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Restaurant Name
+                    </label>
+                    <input asp-for="Name"
+                           class="form-control"
+                           required />
+                </div>
+
+                <!-- Cuisine -->
+                <div class="col-md-6">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Cuisine
+                    </label>
+                    <input asp-for="Cuisine"
+                           class="form-control"
+                           required />
+                </div>
+
+                <!-- Address -->
+                <div class="col-md-8">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Address
+                    </label>
+                    <input asp-for="Address"
+                           class="form-control"
+                           required />
+                </div>
+
+                <!-- Phone -->
+                <div class="col-md-4">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Phone
+                    </label>
+                    <input asp-for="Phone"
+                           class="form-control" />
+                </div>
+
+                <!-- Logo Upload -->
+                <div class="col-md-4">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Restaurant Logo / Photo
+                    </label>
+
+                    @if (!string.IsNullOrEmpty(
+                        Model.ImagePath))
+                    {
+                        <img src="@Model.ImagePath"
+                             class="current-img"
+                             alt="Current logo" />
+                        <div style="font-size:0.75rem;
+                            color:var(--muted);
+                            margin-bottom:8px;">
+                            Current logo shown above.
+                            Upload new to replace it.
+                        </div>
+                    }
+
+                    <div class="img-upload-wrap">
+                        <input type="file"
+                               name="restaurantImage"
+                               accept="image/*"
+                               onchange="previewImage(
+                        this,
+                        'editRestPreview',
+                        'editRestLabel')" />
+                        <img id="editRestPreview"
+                             style="display:none;
+                        width:100%;
+                        height:90px;
+                        object-fit:cover;
+                        border-radius:8px;
+                        margin-bottom:6px;"
+                             src="" alt="Preview" />
+                        <div id="editRestLabel"
+                             class="img-upload-label">
+                            <div style="font-size:1.4rem;">
+                                📷
+                            </div>
+                            <div style="margin-top:4px;">
+                                Click to upload
+                                new logo
+                            </div>
+                            <div style="font-size:0.72rem;
+                                color:#bbb;
+                                margin-top:2px;">
+                                Auto-resized to 400×400
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Fee -->
+                <div class="col-md-2">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Delivery Fee (BDT)
+                    </label>
+                    <input asp-for="DeliveryFee"
+                           type="number"
+                           class="form-control"
+                           min="0" />
+                </div>
+
+                <!-- Delivery Time -->
+                <div class="col-md-2">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Delivery Time (min)
+                    </label>
+                    <input asp-for="DeliveryTime"
+                           type="number"
+                           class="form-control"
+                           min="1" />
+                </div>
+
+                <!-- Min Order -->
+                <div class="col-md-2">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Min Order (BDT)
+                    </label>
+                    <input asp-for="MinOrder"
+                           type="number"
+                           class="form-control"
+                           min="0" />
+                </div>
+
+                <!-- Tag -->
+                <div class="col-md-2">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Tag
+                    </label>
+                    <select asp-for="Tag"
+                            class="form-select">
+                        <option value="">None</option>
+                        <option value="Popular">
+                            Popular
+                        </option>
+                        <option value="New">New</option>
+                        <option value="Trending">
+                            Trending
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                    <label class="form-label"
+                           style="font-size:0.85rem;
+                        font-weight:600;">
+                        Description
+                    </label>
+                    <textarea asp-for="Description"
+                              class="form-control"
+                              rows="3"></textarea>
+                </div>
+
+                <!-- Submit -->
+                <div class="col-12">
+                    <button type="submit"
+                            class="btn-admin">
+                        Save Changes
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(
+            input, previewId, labelId) {
+            var preview =
+                document.getElementById(previewId);
+            var label =
+                document.getElementById(labelId);
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (label)
+                        label.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

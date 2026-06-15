@@ -1,0 +1,170 @@
+﻿@{
+    ViewData["Title"] = "Customer Reviews";
+    Layout =
+        "~/Views/Shared/_OwnerLayout.cshtml";
+
+    var ratings =
+        ViewBag.Ratings
+        as IEnumerable<dynamic>
+        ?? new List<dynamic>();
+
+    double avgRating =
+        ViewBag.AvgRating is double d ? d : 0.0;
+
+    var starCounts =
+        ViewBag.StarCounts as int[]
+        ?? new int[6];
+}
+
+<div class="page-heading">
+    Customer Reviews
+</div>
+<div class="page-sub">
+    See what your customers say about you
+</div>
+
+<!-- Summary -->
+<div class="owner-card">
+    <h5>⭐ Rating Summary</h5>
+    <div style="display:flex;
+        align-items:center;
+        gap:30px;
+        flex-wrap:wrap;">
+        <div style="text-align:center;">
+            <div style="font-size:3rem;
+                font-weight:700;
+                color:var(--primary);">
+                @avgRating
+            </div>
+            <div style="font-size:1.3rem;
+                color:#f59f00;">
+                @for (int s = 1; s <= 5; s++)
+                {
+                    @(s <= (int)Math.Round(
+                        avgRating) ? "⭐" : "☆")
+                }
+            </div>
+            <div style="font-size:0.82rem;
+                color:var(--muted);
+                margin-top:4px;">
+                @ratings.Count() reviews
+            </div>
+        </div>
+        <div style="flex:1; min-width:200px;">
+            @for (int s = 5; s >= 1; s--)
+            {
+                int count = starCounts[s];
+                int total = ratings.Count();
+                int pct = total > 0
+                    ? count * 100 / total : 0;
+
+                <div style="display:flex;
+                    align-items:center;
+                    gap:8px;
+                    margin-bottom:6px;
+                    font-size:0.82rem;">
+                    <span style="width:14px;
+                        text-align:right;
+                        font-weight:600;">
+                        @s
+                    </span>
+                    <span style="color:#f59f00;">
+                        ⭐
+                    </span>
+                    <div style="flex:1;
+                        height:8px;
+                        background:var(--border);
+                        border-radius:4px;
+                        overflow:hidden;">
+                        <div style="width:@pct%;
+                            height:100%;
+                            background:#f59f00;
+                            border-radius:4px;">
+                        </div>
+                    </div>
+                    <span style="width:24px;
+                        color:var(--muted);">
+                        @count
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Reviews list -->
+<div class="owner-card">
+    <h5>💬 All Reviews</h5>
+    @if (!ratings.Any())
+    {
+        <div style="text-align:center;
+            padding:40px;
+            color:var(--muted);">
+            No reviews yet.
+        </div>
+    }
+    else
+    {
+        @foreach (var r in ratings)
+        {
+            <div style="padding:14px 0;
+                border-bottom:1px solid
+                var(--border);">
+                <div style="display:flex;
+                    align-items:center;
+                    gap:10px;
+                    margin-bottom:6px;">
+                    <div style="width:34px;
+                        height:34px;
+                        border-radius:50%;
+                        background:var(--primary);
+                        color:#fff;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:0.82rem;
+                        font-weight:700;
+                        flex-shrink:0;">
+                        @(r.UserEmail.ToString()
+                            .Substring(0, 1)
+                            .ToUpper())
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:0.85rem;
+                            font-weight:600;">
+                            @r.UserEmail
+                        </div>
+                        <div style="color:#f59f00;
+                            font-size:0.85rem;">
+                            @for (int s = 1;
+                                  s <= 5; s++)
+                            {
+                                @(s <= (int)r.Stars
+                                    ? "⭐" : "☆")
+                            }
+                        </div>
+                    </div>
+                    <div style="font-size:0.75rem;
+                        color:var(--muted);">
+                        @((DateTime)r.RatedAt)
+                        .ToString("dd MMM yyyy")
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(
+                    (string?)r.Comment))
+                {
+                    <div style="font-size:0.85rem;
+                        color:var(--text);
+                        margin-left:44px;
+                        background:#f8f9ff;
+                        border-radius:8px;
+                        padding:10px 14px;
+                        border-left:3px solid
+                        var(--primary);">
+                        "@r.Comment"
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

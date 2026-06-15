@@ -1,0 +1,599 @@
+﻿@{
+    ViewData["Title"] = "Meal Subscriptions";
+    Layout =
+        "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<style>
+    .page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .page-sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-top: 2px;
+        margin-bottom: 20px;
+    }
+
+    .feature-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+        .feature-card h5 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+    .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .plan-card {
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        position: relative;
+    }
+
+        .plan-card:hover,
+        .plan-card.selected {
+            border-color: var(--primary);
+            background: #fff5f5;
+        }
+
+            .plan-card.selected::after {
+                content: '✓';
+                position: absolute;
+                top: 8px;
+                right: 12px;
+                color: var(--primary);
+                font-weight: 700;
+            }
+
+    .plan-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+
+    .plan-price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+        .plan-price span {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+    .plan-meals {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-top: 6px;
+    }
+
+    .plan-desc {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 8px;
+        line-height: 1.4;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #444;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 1.5px solid var(--border);
+        padding: 9px 13px;
+        font-size: 0.88rem;
+        font-family: 'Poppins',sans-serif;
+        width: 100%;
+        transition: border-color 0.2s;
+    }
+
+        .form-control:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(232,69,69,0.1);
+        }
+
+    .btn-primary-sub {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 10px 24px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Poppins',sans-serif;
+        transition: background 0.2s;
+    }
+
+        .btn-primary-sub:hover {
+            background: var(--primary-dk);
+        }
+
+        .btn-primary-sub:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+    .btn-danger-sub {
+        background: #fdecea;
+        border: 1.5px solid #f5c6c6;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #c62828;
+        cursor: pointer;
+        font-family: 'Poppins',sans-serif;
+    }
+
+    .sub-card {
+        background: #f8f9ff;
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 14px;
+        border: 1.5px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .status-active {
+        background: #e8f9ee;
+        color: #1d7044;
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+    .status-cancelled {
+        background: #fdecea;
+        color: #c62828;
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+    .status-expired {
+        background: #f0f4ff;
+        color: #555;
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+
+    .plan-summary-box {
+        margin-top: 16px;
+        background: #f0fff4;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 0.85rem;
+        color: #1d7044;
+        display: none;
+    }
+
+    .warning-box {
+        background: #fff8e1;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 0.88rem;
+        color: #5d4037;
+    }
+</style>
+
+@{
+    // ── Load plans ───────────────────────────
+    var planList =
+        ViewBag.Plans
+        as List<HungryHub.Models.MealPlan>
+        ?? new List<HungryHub.Models.MealPlan>();
+
+    // ── Load restaurants ─────────────────────
+    var restList =
+        ViewBag.Restaurants
+        as IEnumerable<dynamic>
+        ?? new List<dynamic>();
+
+    // ── Load subscriptions safely ─────────────
+    // Avoid generic cast which breaks Razor parser
+    bool hasActive = false;
+    int subCount = 0;
+
+    if (ViewBag.Subs != null)
+    {
+        foreach (var s in ViewBag.Subs)
+        {
+            subCount++;
+            if (s.Status == "Active")
+                hasActive = true;
+        }
+    }
+}
+
+<div class="page-title">🍱 Meal Subscriptions</div>
+<div class="page-sub">
+    Subscribe to a weekly meal plan and get
+    food delivered automatically
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger
+        alert-dismissible fade show"
+         style="border-radius:12px;
+        border:none;
+        margin-bottom:16px;">
+        @ViewBag.Error
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<!-- Plans -->
+<div class="feature-card">
+    <h5>📋 Choose a Meal Plan</h5>
+
+    <div class="plan-grid">
+        @foreach (var plan in planList)
+        {
+            decimal monthly = plan.PricePerWeek * 4;
+            <div class="plan-card"
+                 id="planCard_@plan.PlanId"
+                 data-id="@plan.PlanId"
+                 data-name="@plan.PlanName"
+                 data-price="@plan.PricePerWeek"
+                 onclick="selectPlan(this)">
+                <div class="plan-name">
+                    @plan.PlanName
+                </div>
+                <div class="plan-price">
+                    ৳@plan.PricePerWeek
+                    .ToString("N0")
+                    <span>/week</span>
+                </div>
+                <div class="plan-meals">
+                    @plan.MealsPerWeek meals/week
+                </div>
+                <div style="font-size:0.72rem;
+                    color:#888;
+                    margin-top:4px;">
+                    ৳@monthly.ToString("N0")/month
+                </div>
+                <div class="plan-desc">
+                    @plan.Description
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!hasActive)
+    {
+        <form asp-controller="Features"
+              asp-action="Subscribe"
+              method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   name="planId"
+                   id="selectedPlanId"
+                   value="" />
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Restaurant *
+                    </label>
+                    <select name="restaurantId"
+                            class="form-select"
+                            required>
+                        <option value="">
+                            -- Select restaurant --
+                        </option>
+                        @foreach (var r in restList)
+                        {
+                            <option value="@r.RestaurantId">
+                                @r.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Preferred Delivery Time *
+                    </label>
+                    <select name="deliveryTime"
+                            class="form-select">
+                        <option value="12:00 PM">
+                            12:00 PM (Lunch)
+                        </option>
+                        <option value="01:00 PM">
+                            01:00 PM
+                        </option>
+                        <option value="07:00 PM">
+                            07:00 PM (Dinner)
+                        </option>
+                        <option value="08:00 PM">
+                            08:00 PM
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Start Date *
+                    </label>
+                    <input type="date"
+                           name="startDate"
+                           class="form-control"
+                           min="@DateTime.Now
+                    .AddDays(1)
+                    .ToString(
+                    " yyyy-MM-dd")"
+                           required />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">
+                        Delivery Address *
+                    </label>
+                    <input type="text"
+                           name="deliveryAddr"
+                           class="form-control"
+                           placeholder="Your full delivery address"
+                           required />
+                </div>
+            </div>
+
+            <div class="plan-summary-box"
+                 id="planSummaryBox">
+                Selected:
+                <strong id="planSummaryText">
+                    No plan selected
+                </strong>
+            </div>
+
+            <div style="margin-top:16px;">
+                <button type="submit"
+                        class="btn-primary-sub"
+                        id="subscribeBtn"
+                        disabled>
+                    🍱 Subscribe Now
+                </button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="warning-box">
+            ⚠️ You already have an active
+            subscription. Cancel it below to
+            subscribe to a new plan.
+        </div>
+    }
+</div>
+
+<!-- My subscriptions -->
+@if (subCount > 0)
+{
+    <div class="feature-card">
+        <h5>🗓️ My Subscriptions</h5>
+
+        @foreach (var sub in ViewBag.Subs)
+        {
+            string subStatus =
+                (string)(sub.Status ?? "Unknown");
+
+            string statusCss =
+                subStatus == "Active"
+                    ? "status-active"
+                : subStatus == "Cancelled"
+                    ? "status-cancelled"
+                : "status-expired";
+
+            string planName =
+                sub.Plan != null
+                    ? (string)sub.Plan.PlanName
+                    : "Plan";
+
+            decimal weeklyPrice =
+                sub.Plan != null
+                    ? (decimal)sub.Plan.PricePerWeek
+                    : 0m;
+
+            int mealsPerWeek =
+                sub.Plan != null
+                    ? (int)sub.Plan.MealsPerWeek
+                    : 0;
+
+            string restName =
+                (string)(sub.RestaurantName ?? "");
+
+            string delivTime =
+                (string)(sub.DeliveryTime ?? "");
+
+            string delivAddr =
+                (string)(sub.DeliveryAddr ?? "");
+
+            DateTime startDt =
+                (DateTime)sub.StartDate;
+
+            DateTime endDt =
+                (DateTime)sub.EndDate;
+
+            decimal totalPaid =
+                (decimal)sub.TotalPaid;
+
+            int subId = (int)sub.SubscriptionId;
+
+            <div class="sub-card">
+                <div>
+                    <div style="font-weight:700;
+                        font-size:0.97rem;">
+                        🍱 @planName
+                    </div>
+                    <div style="font-size:0.82rem;
+                        color:var(--muted);
+                        margin-top:4px;">
+                        🍽️ @restName
+                        &nbsp;|&nbsp;
+                        🕐 @delivTime
+                    </div>
+                    <div style="font-size:0.82rem;
+                        color:var(--muted);
+                        margin-top:2px;">
+                        📅 @startDt.ToString("dd MMM")
+                        – @endDt.ToString(
+                                                    "dd MMM yyyy")
+                        &nbsp;|&nbsp;
+                        📍 @delivAddr
+                    </div>
+                    <div style="font-size:0.82rem;
+                        color:var(--muted);
+                        margin-top:2px;">
+                        @mealsPerWeek meals/week
+                        &nbsp;|&nbsp;
+                        ৳@weeklyPrice.ToString("N0")
+                        /week
+                    </div>
+                </div>
+
+                <div style="text-align:right;">
+                    <span class="@statusCss">
+                        @subStatus
+                    </span>
+                    <div style="font-size:0.85rem;
+                        font-weight:700;
+                        color:var(--primary);
+                        margin-top:6px;">
+                        ৳@totalPaid.ToString("N0")
+                        total
+                    </div>
+
+                    @if (subStatus == "Active")
+                    {
+                        <form asp-controller="Features"
+                              asp-action="CancelSubscription"
+                              method="post"
+                              style="margin-top:8px;"
+                              onsubmit="return confirm(
+                            'Cancel your subscription?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden"
+                                   name="subscriptionId"
+                                   value="@subId" />
+                            <button type="submit"
+                                    class="btn-danger-sub">
+                                Cancel Plan
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function selectPlan(card) {
+            document.querySelectorAll('.plan-card')
+                .forEach(function(c) {
+                    c.classList.remove('selected');
+                });
+
+            card.classList.add('selected');
+
+            var planId =
+                card.getAttribute('data-id');
+            var planName =
+                card.getAttribute('data-name');
+            var weekPrice =
+                parseFloat(
+                    card.getAttribute('data-price'))
+                || 0;
+
+            var hiddenInput =
+                document.getElementById(
+                    'selectedPlanId');
+            if (hiddenInput)
+                hiddenInput.value = planId;
+
+            var btn =
+                document.getElementById(
+                    'subscribeBtn');
+            if (btn) btn.disabled = false;
+
+            var box =
+                document.getElementById(
+                    'planSummaryBox');
+            var txt =
+                document.getElementById(
+                    'planSummaryText');
+
+            if (box && txt) {
+                txt.textContent =
+                    planName +
+                    ' — ৳' +
+                    weekPrice.toFixed(0) +
+                    '/week (৳' +
+                    (weekPrice * 4).toFixed(0) +
+                    '/month, 4 weeks)';
+                box.style.display = 'block';
+            }
+        }
+    </script>
+}

@@ -1,0 +1,197 @@
+﻿@{
+    ViewData["Title"] = "Opening Hours";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var rest = ViewBag.Restaurant
+        as HungryHub.Models.RestaurantDb;
+    var hours = ViewBag.Hours
+        as List<HungryHub.Models.RestaurantHours>
+        ?? new List<HungryHub.Models.RestaurantHours>();
+}
+
+<style>
+    .hours-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+
+    .day-name {
+        width: 90px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text);
+    }
+
+    .closed-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .closed-wrap input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #e84545;
+        }
+
+        .closed-wrap label {
+            font-size: 0.82rem;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+    .time-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .time-wrap.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .time-wrap input[type="time"] {
+            width: 120px;
+        }
+
+    .time-sep {
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="page-heading">
+    Opening Hours — @rest?.Name
+</div>
+<div class="page-sub">
+    Set opening and closing times for each day
+</div>
+
+@if (ViewBag.SuccessMessage != null)
+{
+    <div class="alert alert-success
+        alert-dismissible fade show"
+         style="border-radius:12px; border:none;
+        margin-bottom:16px;">
+        @ViewBag.SuccessMessage
+        <button type="button" class="btn-close"
+                data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div style="margin-bottom:12px;">
+    <a href="/Admin/Restaurants"
+           class="btn-admin"
+           style="background:#f4f6fb;
+        color:var(--text);">
+        Back to Restaurants
+    </a>
+</div>
+
+<div class="admin-table-card"
+     style="max-width:680px;">
+    <div class="admin-table-header">
+        <div class="admin-table-title">
+            Weekly Schedule
+        </div>
+    </div>
+    <div style="padding:20px;">
+        <form asp-controller="Admin"
+              asp-action="SaveHours"
+              method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden"
+                   name="restaurantId"
+                   value="@rest?.RestaurantId" />
+
+            @foreach (var h in hours)
+            {
+                string timesId = "times_" + h.HoursId;
+                string cbId = "closed_" + h.HoursId;
+                string disabledClass =
+                    h.IsClosed ? "time-wrap disabled"
+                               : "time-wrap";
+
+                string openVal =
+                    h.OpenTime.HasValue
+                        ? h.OpenTime.Value
+                              .ToString("HH:mm")
+                        : "09:00";
+                string closeVal =
+                    h.CloseTime.HasValue
+                        ? h.CloseTime.Value
+                              .ToString("HH:mm")
+                        : "23:00";
+
+                <div class="hours-row">
+
+                    <input type="hidden"
+                           name="hoursIds"
+                           value="@h.HoursId" />
+
+                    <!-- Day label -->
+                    <div class="day-name">
+                        @h.DayName
+                    </div>
+
+                    <!-- Closed checkbox -->
+                    <div class="closed-wrap">
+                        <input type="checkbox"
+                               name="isCloseds"
+                               value="true"
+                               id="@cbId"
+                        @(h.IsClosed
+                                                           ? "checked" : "")
+                               onchange="toggleDay(
+                        this, '@timesId')" />
+                        <label for="@cbId">
+                            Closed
+                        </label>
+                    </div>
+
+                    <!-- Time inputs -->
+                    <div id="@timesId"
+                         class="@disabledClass">
+                        <input type="time"
+                               name="openTimes"
+                               value="@openVal"
+                               class="form-control" />
+                        <span class="time-sep">to</span>
+                        <input type="time"
+                               name="closeTimes"
+                               value="@closeVal"
+                               class="form-control" />
+                    </div>
+
+                </div>
+            }
+
+            <div style="margin-top:20px;">
+                <button type="submit"
+                        class="btn-admin">
+                    Save Hours
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleDay(cb, timesId) {
+            var el = document.getElementById(timesId);
+            if (cb.checked) {
+                el.classList.add('disabled');
+            } else {
+                el.classList.remove('disabled');
+            }
+        }
+
+    </script>
+}
